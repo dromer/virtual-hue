@@ -4,8 +4,10 @@
 # It is released under AGPL 3.0
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import configparser
 import json
 import os
+import sys
 import time
 
 lights = []
@@ -93,7 +95,7 @@ def set_light_state(nr, state):
             print 'switch %s off' % lights[nr]['name']
 
     # invoke command
-    os.system('%s %s %s' % (lights[nr]['cmd'], lights[nr]['name'], par))
+    os.system('%s %s %s' % (lights[nr]['cmd'], lights[nr]['id'], par))
 
     json_obj = []
 
@@ -319,15 +321,30 @@ def run(server_class=HTTPServer, handler_class=server, port=80):
 	print 'Starting http listener...'
 	httpd.serve_forever()
 
-def add_light(name, command):
+def add_light(name, id_, command):
         global lights
 
         row = dict()
         row['name'] = name
+        row['id'] = id_
         row['cmd'] = command
 
         lights.append(row)
 
-add_light('test command', 'echo')
+if len(sys.argv) != 2:
+    print 'Usage: %s configuration-file' % sys.argv[0]
+    sys.exit(1)
+
+settings = configparser.ConfigParser()
+settings.read(sys.argv[1])
+
+for section in settings.sections():
+    if section == 'lamp':
+        items = dict(settings.items(section))
+        id_ = items['id']
+        name = items['name']
+        cmd = items['cmd']
+
+        add_light(name, id_, cmd)
 
 run()
