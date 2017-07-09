@@ -2,10 +2,16 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
+import time
 
 lights = []
 
 UTC = "2014-07-17T09:27:35"
+username = "83b7780291a6ceffbe0bd049104df"
+devicetype = "something"
+
+def gen_ts():
+    return time.strftime('%Y-%m-%dT%H:%M:%S')
 
 def put_config_json(j):
     entry = json.loads(j)
@@ -13,6 +19,10 @@ def put_config_json(j):
     if 'UTC' in entry:
         global UTC
         UTC = entry['UTC']
+
+    elif 'devicetype' in entry:
+        global devicetype
+        devicetype = entry['devicetype']
 
 def gen_config():
     answer = dict()
@@ -37,6 +47,14 @@ def gen_config():
     answer["linkbutton"] = False
     answer["portalservices"] = False
     answer["portalconnection"] = "connected"
+
+    wl = dict()
+    key = '%s' % username
+    wl[key] = dict()
+    wl[key]["last use date"] = gen_ts()
+    wl[key]["create date"] = "2014-04-08T08:55:10"
+    wl[key]["name"] = devicetype
+    answer['whitelist'] = wl
 
     ps = dict()
     ps["signedon"] = True
@@ -223,10 +241,10 @@ class server(BaseHTTPRequestHandler):
                 if len(parts) >= 2 and parts[1] == 'api':
 			self._set_headers()
 
-                        #data_len = int(self.headers['Content-Length'])
-                        #print self.rfile.read(data_len)
+                        data_len = int(self.headers['Content-Length'])
+                        print self.rfile.read(data_len)
 
-			self.wfile.write('[{"success":{"username": "83b7780291a6ceffbe0bd049104df"}}]')
+			self.wfile.write('[{"success":{"username": "%s"}}]' % username)
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
 			self._set_headers()
