@@ -9,11 +9,13 @@ lights = []
 UTC = "2014-07-17T09:27:35"
 username = "83b7780291a6ceffbe0bd049104df"
 devicetype = "something"
+portalservices = False
 
 def gen_ts():
     return time.strftime('%Y-%m-%dT%H:%M:%S')
 
 def put_config_json(j):
+    print j
     entry = json.loads(j)
 
     if 'UTC' in entry:
@@ -23,6 +25,10 @@ def put_config_json(j):
     elif 'devicetype' in entry:
         global devicetype
         devicetype = entry['devicetype']
+
+    elif 'portalservices' in entry:
+        global portalservices
+        portalservices = entry['portalservices']
 
 def gen_config():
     answer = dict()
@@ -45,7 +51,7 @@ def gen_config():
     answer["swversion"] = "01038802"
     answer["apiversion"] = "1.16.0"
     answer["linkbutton"] = False
-    answer["portalservices"] = False
+    answer["portalservices"] = portalservices
     answer["portalconnection"] = "connected"
 
     wl = dict()
