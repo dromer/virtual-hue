@@ -21,7 +21,6 @@ def gen_ts():
     return time.strftime('%Y-%m-%dT%H:%M:%S')
 
 def put_config_json(j):
-    print j
     entry = json.loads(j)
 
     if 'UTC' in entry:
@@ -105,6 +104,12 @@ def set_light_state(nr, state):
     json_obj.append(entry)
 
     return json.dumps(json_obj)
+
+def set_group_state(nr, state):
+    # only 1 group in the current version
+
+    for i in xrange(0, len(lights)):
+        set_light_state(i, state)
 
 def gen_ind_light_json(nr):
     entry = dict()
@@ -299,6 +304,11 @@ class server(BaseHTTPRequestHandler):
                         print 'set individual light state'
 
                         self.wfile.write(set_light_state(int(parts[4]) - 1, content))
+
+                elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
+                        print 'set individual group state'
+
+                        self.wfile.write(set_group_state(int(parts[4]) - 1, content))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
                         print 'put config'
