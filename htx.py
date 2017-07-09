@@ -122,6 +122,7 @@ def gen_lights():
 def gen_groups():
     answer = dict()
 
+    #### a light group
     g = dict()
     g['name'] = 'Group 1'
 
@@ -146,6 +147,20 @@ def gen_groups():
     g['action'] = action
 
     answer['1'] = g
+
+    #### and a room
+    g2 = dict()
+    #{"name":"test","lights":[],"type":"Room","class":"Living room"}
+    g2['name'] = 'A virtual room'
+
+    g2['lights'] = []
+    for i in xrange(0, len(lights)):
+        g2['lights'].append('%d' % (i + 1))
+
+    g2["type"] = 'Room'
+    g2["class"] = 'Living room'
+
+    answer['2'] = g2
 
     return answer
 
@@ -262,24 +277,29 @@ class server(BaseHTTPRequestHandler):
         def do_PUT(self):
 		self._set_headers()
 
+                data_len = int(self.headers['Content-Length'])
+                content = self.rfile.read(data_len)
+
                 parts = self.path.split('/')
 
                 if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
                         print 'set individual light state'
 
-                        data_len = int(self.headers['Content-Length'])
-                        self.wfile.write(set_light_state(int(parts[4]) - 1, self.rfile.read(data_len)))
+                        self.wfile.write(set_light_state(int(parts[4]) - 1, content))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
                         print 'put config'
 
-                        data_len = int(self.headers['Content-Length'])
-                        put_config_json(self.rfile.read(data_len))
+                        put_config_json(content)
 
 			self.wfile.write('[{"success":"Updated."}]')
 
+                elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
+                        print 'put config (2)'
+                        print content
+
                 else:
-                        print 'unknown put request', self.path
+                        print 'unknown put request', self.path, content
                 
         
 def run(server_class=HTTPServer, handler_class=server, port=80):
