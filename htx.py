@@ -74,6 +74,9 @@ def gen_config():
 def gen_config_json():
     return json.dumps(gen_config())
 
+def gen_sensors_json():
+    return json.dumps(dict())
+
 def set_light_state(nr, state):
     entry = json.loads(state)
 
@@ -193,6 +196,8 @@ def gen_dump_json():
 
     answer['lights'] = gen_lights()
 
+    answer['sensors'] = dict()
+
     answer['groups'] = gen_groups()
 
     answer['config'] = gen_config()
@@ -231,6 +236,10 @@ class server(BaseHTTPRequestHandler):
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
                         print 'enumerate list of scenes'
                         self.wfile.write(gen_scenes_json())
+
+                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
+                        print 'enumerate list of sensors'
+                        self.wfile.write(gen_sensors_json())
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
                         print 'get individual light state'
