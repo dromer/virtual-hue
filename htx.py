@@ -5,23 +5,35 @@ import json
 
 lights = []
 
+UTC = "2014-07-17T09:27:35"
+
+def put_config_json(j):
+    entry = json.loads(j)
+
+    if 'UTC' in entry:
+        global UTC
+        UTC = entry['UTC']
+
 def gen_config():
     answer = dict()
 
-    answer["name"] = "Philips hue"
+    answer["name"] = "Virtual hue"
+    answer['datastoreversion'] = '59'
     answer["zigbeechannel"] = 15
-    answer["mac"] = "00:17:88:00:00:00"
+    answer["factorynew"] = False
+    answer["mac"] = "00:17:88:00:00:01"
     answer["dhcp"] = False
     #answer["ipaddress"] = "192.168.1.7"
     #answer["netmask"] = "255.255.255.0"
     #answer["gateway"] = "192.168.1.1"
     answer["proxyaddress"] = "none"
     answer["proxyport"] = 0
-    answer["UTC"] = "2014-07-17T09:27:35"
-    answer["localtime"] = "2014-07-17T11:27:35"
+    global UTC
+    answer["UTC"] = UTC
+    answer["localtime"] = UTC
     answer["timezone"] = "Europe/Madrid"
-    answer["swversion"] = "01012917"
-    answer["apiversion"] = "1.3.0"
+    answer["swversion"] = "01038802"
+    answer["apiversion"] = "1.16.0"
     answer["linkbutton"] = False
     answer["portalservices"] = False
     answer["portalconnection"] = "connected"
@@ -210,6 +222,10 @@ class server(BaseHTTPRequestHandler):
                 # should keep track in e.g. an sqlite3 database and then do whitelisting etc
                 if len(parts) >= 2 and parts[1] == 'api':
 			self._set_headers()
+
+                        #data_len = int(self.headers['Content-Length'])
+                        #print self.rfile.read(data_len)
+
 			self.wfile.write('[{"success":{"username": "83b7780291a6ceffbe0bd049104df"}}]')
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
@@ -229,6 +245,14 @@ class server(BaseHTTPRequestHandler):
 
                         data_len = int(self.headers['Content-Length'])
                         self.wfile.write(set_light_state(int(parts[4]) - 1, self.rfile.read(data_len)))
+
+                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+                        print 'put config'
+
+                        data_len = int(self.headers['Content-Length'])
+                        put_config_json(self.rfile.read(data_len))
+
+			self.wfile.write('[{"success":"Updated."}]')
 
                 else:
                         print 'unknown put request', self.path
