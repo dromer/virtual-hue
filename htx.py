@@ -173,11 +173,17 @@ class server(BaseHTTPRequestHandler):
 		self._set_headers()
         
 	def do_POST(self):
+                parts = self.path.split('/')
+
                 # simpler registration; always return the same key
                 # should keep track in e.g. an sqlite3 database and then do whitelisting etc
-		if self.path == '/api/':
+                if len(parts) >= 2 and parts[1] == 'api':
 			self._set_headers()
 			self.wfile.write('[{"success":{"username": "83b7780291a6ceffbe0bd049104df"}}]')
+
+                elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
+			self._set_headers()
+			self.wfile.write('[{"success":{"id": "1"}}]')
 
                 else:
                         print 'unknown post request', self.path
