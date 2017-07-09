@@ -2,6 +2,7 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
+import os
 import time
 
 lights = []
@@ -80,11 +81,16 @@ def gen_sensors_json():
 def set_light_state(nr, state):
     entry = json.loads(state)
 
+    par = 'off'
     if entry['on'] == True:
             print 'switch %s on' % lights[nr]['name']
+            par = 'on'
 
     else:
             print 'switch %s off' % lights[nr]['name']
+
+    # invoke command
+    os.system('%s %s %s' % (lights[nr]['cmd'], lights[nr]['name'], par))
 
     json_obj = []
 
@@ -319,6 +325,6 @@ def add_light(name, command):
 
         lights.append(row)
 
-add_light('command', 'echo')
+add_light('test command', 'echo')
 
 run()
