@@ -72,7 +72,7 @@ def gen_config():
     return answer
 
 def gen_config_json():
-    return json.dumps(get_config())
+    return json.dumps(gen_config())
 
 def set_light_state(nr, state):
     entry = json.loads(state)
@@ -130,7 +130,14 @@ def gen_groups():
     for i in xrange(0, len(lights)):
         g['lights'].append('%d' % (i + 1))
 
-    g["type"] = 'LightGroup'
+    g["type"] = 'Room'
+
+    g["class"] = 'Living room'
+
+    state = dict()
+    state['all_on'] = False
+    state['any_on'] = False
+    g['state'] = state
 
     action = dict()
     action['on'] = True
@@ -147,20 +154,6 @@ def gen_groups():
     g['action'] = action
 
     answer['1'] = g
-
-    #### and a room
-    g2 = dict()
-    #{"name":"test","lights":[],"type":"Room","class":"Living room"}
-    g2['name'] = 'A virtual room'
-
-    g2['lights'] = []
-    for i in xrange(0, len(lights)):
-        g2['lights'].append('%d' % (i + 1))
-
-    g2["type"] = 'Room'
-    g2["class"] = 'Living room'
-
-    answer['2'] = g2
 
     return answer
 
@@ -223,7 +216,7 @@ class server(BaseHTTPRequestHandler):
 
                 parts = self.path.split('/')
 
-                if len(parts) >= 3 and parts[1] == 'api':
+                if len(parts) == 3 and parts[1] == 'api':
                         print 'get all state'
                         self.wfile.write(gen_dump_json())
 
