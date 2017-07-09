@@ -116,6 +116,31 @@ def gen_groups():
 def gen_groups_json():
     return json.dumps(gen_groups())
 
+def gen_scenes():
+    answer = dict()
+
+    scene = dict()
+    scene["name"] = "Kathy on 1449133269486"
+
+    scene["lights"] = []
+    for i in xrange(0, len(lights)):
+        scene['lights'].append('%d' % (i + 1))
+
+    scene["owner"] = "ffffffffe0341b1b376a2389376a2389"
+    scene["recycle"] = True,
+    scene["locked"] = False,
+    scene["appdata"] = dict()
+    scene["picture"] = ""
+    scene["lastupdated"] = "2015-12-03T08:57:13"
+    scene["version"] = 1
+
+    answer['123123123-on-0'] = scene
+
+    return answer
+
+def gen_scenes_json():
+    return json.dumps(gen_scenes())
+
 def gen_light_json():
     return json.dumps(gen_lights())
 
@@ -131,6 +156,8 @@ def gen_dump_json():
     answer['swupdate2'] = dict()
 
     answer['schedules'] = dict()
+
+    answer['scenes'] = dict()
 
     return json.dumps(answer)
 
@@ -156,6 +183,10 @@ class server(BaseHTTPRequestHandler):
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
                         print 'enumerate list of groups'
                         self.wfile.write(gen_groups_json())
+
+                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
+                        print 'enumerate list of scenes'
+                        self.wfile.write(gen_scenes_json())
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
                         print 'get individual light state'
