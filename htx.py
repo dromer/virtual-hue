@@ -1,5 +1,8 @@
 #! /usr/bin/python
 
+# This program was written by Folkert van Heusden.
+# It is released under AGPL 3.0
+
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
