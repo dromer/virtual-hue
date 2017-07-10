@@ -17,7 +17,9 @@ from twisted.internet.protocol import DatagramProtocol
 ssdp_addr = '239.255.255.250'
 ssdp_port = 1900
 
-uid = '2f402f80-da50-11e1-9b23-001788102201'
+mac = [ '00', '17', '88', '10', '22', '01' ]
+
+uid = '2f402f80-da50-11e1-9b23-%s' % ''.join(mac)
 
 lights = []
 
@@ -51,7 +53,7 @@ def gen_config():
     answer['datastoreversion'] = '59'
     answer["zigbeechannel"] = 15
     answer["factorynew"] = False
-    answer["mac"] = "00:17:88:00:00:01"
+    answer["mac"] = ':'.join(mac)
     answer["dhcp"] = False
     #answer["ipaddress"] = "192.168.1.7"
     #answer["netmask"] = "255.255.255.0"
@@ -252,11 +254,11 @@ def gen_description_xml(addr):
 	      <modelName>Virtual hue</modelName>
 	      <modelNumber>1</modelNumber>
 	      <modelURL>https://github.com/flok99/virtual-hue</modelURL>
-	      <serialNumber>1</serialNumber>
+	      <serialNumber>%s</serialNumber>
 	      <UDN>uuid:%s/UDN>
 	      <presentationURL>index.html</presentationURL>
 	   </device>
-	</root>""" % (addr, uid)
+	</root>""" % (addr, ''.join(mac), uid)
 
 	return reply
 
@@ -391,7 +393,7 @@ def gen_ssdp_content(addr, st_nt):
 	  "CACHE-CONTROL: max-age=100\r\n",
 	  "LOCATION: http://%s:80/description.xml\r\n" % addr,
 	  "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
-	  "hue-bridgeid: 001788FFFE14F275\r\n",
+	  "hue-bridgeid: %sFFFE%s\r\n" % (''.join(mac[0:3]), ''.join(mac[3:6])),
 	  "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
 	  "USN: uuid:%s\r\n" % uid,
 	  "\r\n" ]
@@ -476,6 +478,8 @@ for section in settings.sections():
 
         add_light(name, id_, cmd)
 
-startSSDPListener('192.168.64.137') # FIXME
+main_config = dict(settings.items('main'))
+
+startSSDPListener(main_config['listen-address']) # FIXME
 
 run()
