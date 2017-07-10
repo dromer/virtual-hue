@@ -120,13 +120,18 @@ def set_light_state(nr, state):
     entry = json.loads(state)
 
     par = 'off'
-    print entry
+    #print entry
     if 'on' in entry and entry['on'] == True:
             print 'switch %s on' % lights[nr]['name']
             par = 'on'
 
     else:
             print 'switch %s off' % lights[nr]['name']
+
+    if par == 'on':
+        lights[nr]['state'] = True
+    else:
+        lights[nr]['state'] = False
 
     # invoke command
     os.system('%s %s %s' % (lights[nr]['cmd'], lights[nr]['id'], par))
@@ -150,7 +155,7 @@ def gen_ind_light_json(nr):
     entry = dict()
 
     entry['state'] = dict()
-    entry['state']['on'] = False
+    entry['state']['on'] = lights[nr]['state']
     entry['state']['reachable'] = True
 
     entry['type'] = 'Switch'
@@ -429,6 +434,7 @@ def add_light(name, id_, command):
         row['name'] = name
         row['id'] = id_
         row['cmd'] = command
+        row['state'] = False
 
         lights.append(row)
 
