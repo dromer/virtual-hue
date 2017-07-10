@@ -121,7 +121,7 @@ def set_light_state(nr, state):
 
     par = 'off'
     print entry
-    if entry['on'] == True:
+    if 'on' in entry and entry['on'] == True:
             print 'switch %s on' % lights[nr]['name']
             par = 'on'
 
