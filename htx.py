@@ -29,7 +29,6 @@ description_xml = 'description.xml'
 
 lights = []
 
-UTC = "2014-07-17T09:27:35"
 username = "83b7780291a6ceffbe0bd049104df"
 devicetype = "something"
 portalservices = False
@@ -40,11 +39,7 @@ def gen_ts():
 def put_config_json(j):
     entry = json.loads(j)
 
-    if 'UTC' in entry:
-        global UTC
-        UTC = entry['UTC']
-
-    elif 'devicetype' in entry:
+    if 'devicetype' in entry:
         global devicetype
         devicetype = entry['devicetype']
 
@@ -61,8 +56,8 @@ def gen_config():
     answer["mac"] = ':'.join(mac)
     answer["dhcp"] = False
     answer["ipaddress"] = main_config['listen-address']
-    #answer["netmask"] = "255.255.255.0"
-    #answer["gateway"] = "192.168.1.1"
+    answer["netmask"] = main_config['netmask']
+    answer["gateway"] = main_config['gateway']
     answer["proxyaddress"] = "none"
     answer["proxyport"] = 0
     answer["UTC"] = gen_ts()
@@ -165,18 +160,21 @@ def gen_ind_light_json(nr):
 
     return entry
 
-def gen_lights():
+def gen_lights(which):
     global lights
 
-    json_obj = dict()
+    if which == None:
+        json_obj = dict()
 
-    nr = 1
-    for l in lights:
-        json_obj['%d' % nr] = gen_ind_light_json(nr - 1)
+        nr = 1
+        for l in lights:
+            json_obj['%d' % nr] = gen_ind_light_json(nr - 1)
         
-        nr += 1
+            nr += 1
 
-    return json_obj
+        return json_obj
+
+    return gen_ind_light_json(which)
 
 def gen_groups():
     answer = dict()
@@ -244,13 +242,13 @@ def gen_scenes():
 def gen_scenes_json():
     return json.dumps(gen_scenes(), sort_keys=True)
 
-def gen_light_json():
-    return json.dumps(gen_lights(), sort_keys=True)
+def gen_light_json(which):
+    return json.dumps(gen_lights(which), sort_keys=True)
 
 def gen_dump_json():
     answer = dict()
 
-    answer['lights'] = gen_lights()
+    answer['lights'] = gen_lights(None)
 
     answer['sensors'] = dict()
 
@@ -339,7 +337,11 @@ class server(BaseHTTPRequestHandler):
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
                         print 'enumerate list of lights'
-                        self.wfile.write(gen_light_json())
+
+			if len(parts) == 4 or parts[4] == '':
+				self.wfile.write(gen_light_json(None))
+			else:
+				self.wfile.write(gen_light_json(int(parts[4]) - 1))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
                         print 'enumerate list of groups'
@@ -520,7 +522,7 @@ settings = configparser.ConfigParser()
 settings.read(sys.argv[1])
 
 for section in settings.sections():
-    if section == 'lamp':
+    if len(section) > 4 and section[0:4] == 'lamp':
         items = dict(settings.items(section))
         id_ = items['id']
         name = items['name']
