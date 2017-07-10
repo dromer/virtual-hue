@@ -226,6 +226,31 @@ def gen_dump_json():
 
     return json.dumps(answer)
 
+def gen_description_xml(addr):
+	reply = """<root xmlns="urn:schemas-upnp-org:device-1-0">
+	   <specVersion>
+	      <major>1</major>
+	      <minor>0</minor>
+	   </specVersion>
+	   <URLBase>http://%s/</URLBase>
+	   <device>
+	      <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
+	      <friendlyName>Virtual hue</friendlyName>
+	      <manufacturer>vanheusden.com</manufacturer>
+	      <manufacturerURL>http://www.vanheusden.com</manufacturerURL>
+	      <modelDescription>Virtual Philips hue bridge</modelDescription>
+	      <modelName>Virtual hue</modelName>
+	      <modelNumber>1</modelNumber>
+	      <modelURL>https://github.com/flok99/virtual-hue</modelURL>
+	      <serialNumber>1</serialNumber>
+	      <UDN>uuid:2f402f80-da50-11e1-9b23-001788102201</UDN>
+	      <presentationURL>index.html</presentationURL>
+	   </device>
+	</root>""" % addr
+
+	return reply
+
+
 class server(BaseHTTPRequestHandler):
 	def _set_headers(self):
 		self.send_response(200)
@@ -237,7 +262,17 @@ class server(BaseHTTPRequestHandler):
 
                 parts = self.path.split('/')
 
-                if len(parts) == 3 and parts[1] == 'api':
+		if len(parts) == 2 and parts[1] == 'description.xml':
+			print 'get description.xml'
+
+			h = self.server.server_address[0]
+
+			if 'Host' in self.headers:
+				h = self.headers['Host']
+
+			self.wfile.write(gen_description_xml(h))
+
+                elif len(parts) == 3 and parts[1] == 'api':
                         print 'get all state'
                         self.wfile.write(gen_dump_json())
 

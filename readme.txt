@@ -5,5 +5,8 @@ The idea is that htx.py will invoke external programs (e.g. shell scripts) inste
 
 Current status: proof of concept works! You can switch on- and off virtual lights.
 
+required:
+- python-configparser
+
 
 Folkert van Heusden
