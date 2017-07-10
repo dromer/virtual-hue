@@ -7,8 +7,17 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import configparser
 import json
 import os
+import socket
 import sys
+from threading import Thread
 import time
+from twisted.internet import reactor, task
+from twisted.internet.protocol import DatagramProtocol
+
+ssdp_addr = '239.255.255.250'
+ssdp_port = 1900
+
+uid = '2f402f80-da50-11e1-9b23-001788102201'
 
 lights = []
 
@@ -86,6 +95,7 @@ def set_light_state(nr, state):
     entry = json.loads(state)
 
     par = 'off'
+    print entry
     if entry['on'] == True:
             print 'switch %s on' % lights[nr]['name']
             par = 'on'
@@ -243,10 +253,10 @@ def gen_description_xml(addr):
 	      <modelNumber>1</modelNumber>
 	      <modelURL>https://github.com/flok99/virtual-hue</modelURL>
 	      <serialNumber>1</serialNumber>
-	      <UDN>uuid:2f402f80-da50-11e1-9b23-001788102201</UDN>
+	      <UDN>uuid:%s/UDN>
 	      <presentationURL>index.html</presentationURL>
 	   </device>
-	</root>""" % addr
+	</root>""" % (addr, uid)
 
 	return reply
 
@@ -376,6 +386,80 @@ def add_light(name, id_, command):
 
         lights.append(row)
 
+def gen_ssdp_content(addr, st_nt):
+	reply = [
+	  "CACHE-CONTROL: max-age=100\r\n",
+	  "LOCATION: http://%s:80/description.xml\r\n" % addr,
+	  "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
+	  "hue-bridgeid: 001788FFFE14F275\r\n",
+	  "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
+	  "USN: uuid:%s\r\n" % uid,
+	  "\r\n" ]
+
+	return ''.join(reply)
+
+class SSDPDevice(DatagramProtocol):
+    def __init__(self, addr):
+        self.addr = addr
+        self.ssdp = reactor.listenMulticast(ssdp_port, self, listenMultiple=True)
+        self.ssdp.setLoopbackMode(1)
+        self.ssdp.joinGroup(ssdp_addr, interface=addr)
+
+    def datagramReceived(self, datagram, address):
+        first_line = datagram.rsplit('\r\n')[0]
+	parts = first_line.split(' ')
+
+	if parts[0] == 'M-SEARCH':
+		print "Received %s from %r" % (first_line, address, )
+
+		# FIXME
+		reply_header = [
+		  "HTTP/1.1 200 OK\r\n",
+		  "EXT:\r\n"
+		  ]
+
+		reply = ''.join(reply_header) + gen_ssdp_content(self.addr, 'ST')
+
+		self.ssdp.write(reply, address)
+
+    def stop(self):
+        self.ssdp.leaveGroup(ssdp_addr, interface=self.addr)
+        self.ssdp.stopListening()
+
+def __startSSDPListener(addr):
+    obj = SSDPDevice(addr)
+    reactor.addSystemEventTrigger('before', 'shutdown', obj.stop)
+
+def _startSSDPListener(addr):
+    reactor.callWhenRunning(__startSSDPListener, addr)
+    reactor.run(installSignalHandlers=0)
+
+def _startSSDPNotifier(addr):
+	msgHeader = [
+			'NOTIFY * HTTP/1.1\r\n',
+			'HOST: 239.255.255.250:1900\r\n',
+			"NTS: ssdp:alive\r\n"
+		]
+
+	msg = ''.join(msgHeader) + gen_ssdp_content(addr, 'NT')
+
+	while True:
+		print "Sending M-NOTIFY..."
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+		sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
+		sock.sendto(msg, (ssdp_addr, ssdp_port))
+		sock.close()
+		del sock
+
+		time.sleep(6)
+
+def startSSDPListener(addr):
+	print 'Starting SSDP listener...'
+	Thread(target=_startSSDPListener, args=((addr),)).start()
+
+	print 'Starting SSDP notifier...'
+	Thread(target=_startSSDPNotifier, args=((addr),)).start()
+
 if len(sys.argv) != 2:
     print 'Usage: %s configuration-file' % sys.argv[0]
     sys.exit(1)
@@ -391,5 +475,7 @@ for section in settings.sections():
         cmd = items['cmd']
 
         add_light(name, id_, cmd)
+
+startSSDPListener('192.168.64.137') # FIXME
 
 run()

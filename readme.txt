@@ -3,7 +3,7 @@ It allows you to control non-hue devices by using the regular philips hue app or
 
 The idea is that htx.py will invoke external programs (e.g. shell scripts) instead of switching on lamps.
 
-Current status: proof of concept works! You can switch on- and off virtual lights.
+Current status: proof of concept works! You can switch on- and off virtual lights. Also discovery via SSDP/UPNP works but only with the official(!) app - some 3d part software has problems.
 
 required:
 - python-configparser
