@@ -21,6 +21,8 @@ mac = [ '00', '17', '88', '10', '22', '01' ]
 
 uid = '2f402f80-da50-11e1-9b23-%s' % ''.join(mac)
 
+icon = 'hue.png'
+
 lights = []
 
 UTC = "2014-07-17T09:27:35"
@@ -239,28 +241,38 @@ def gen_dump_json():
     return json.dumps(answer)
 
 def gen_description_xml(addr):
-	reply = """<root xmlns="urn:schemas-upnp-org:device-1-0">
-	   <specVersion>
-	      <major>1</major>
-	      <minor>0</minor>
-	   </specVersion>
-	   <URLBase>http://%s/</URLBase>
-	   <device>
-	      <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-	      <friendlyName>Virtual hue</friendlyName>
-	      <manufacturer>vanheusden.com</manufacturer>
-	      <manufacturerURL>http://www.vanheusden.com</manufacturerURL>
-	      <modelDescription>Virtual Philips hue bridge</modelDescription>
-	      <modelName>Virtual hue</modelName>
-	      <modelNumber>1</modelNumber>
-	      <modelURL>https://github.com/flok99/virtual-hue</modelURL>
-	      <serialNumber>%s</serialNumber>
-	      <UDN>uuid:%s/UDN>
-	      <presentationURL>index.html</presentationURL>
-	   </device>
-	</root>""" % (addr, ''.join(mac), uid)
+	reply = [ '<root xmlns="urn:schemas-upnp-org:device-1-0">', 
+		'<specVersion>',
+		'<major>1</major>',
+		'<minor>0</minor>',
+		'</specVersion>',
+		'<URLBase>http://%s/</URLBase>' % addr,
+		'<device>',
+		'<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>',
+		'<friendlyName>Virtual hue</friendlyName>',
+		'<manufacturer>vanheusden.com</manufacturer>',
+		'<manufacturerURL>http://www.vanheusden.com</manufacturerURL>',
+		'<modelDescription>Virtual Philips hue bridge</modelDescription>',
+		'<modelName>Virtual hue</modelName>',
+		'<modelNumber>1</modelNumber>',
+		'<modelURL>https://github.com/flok99/virtual-hue</modelURL>',
+		'<serialNumber>%s</serialNumber>' % ''.join(mac),
+		'<UDN>uuid:%s/UDN>' % uid,
+		'<presentationURL>index.html</presentationURL>',
+		'<iconList>',
+		'<icon>',
+		'<mimetype>image/png</mimetype>',
+		'<height>48</height>',
+		'<width>48</width>',
+		'<depth>24</depth>',
+		'<url>%s</url>' % icon,
+		'</icon>',
+		'</iconList>',
+		'</device>',
+		'</root>'
+		]
 
-	return reply
+	return '\r\n'.join(reply)
 
 
 class server(BaseHTTPRequestHandler):
@@ -283,6 +295,17 @@ class server(BaseHTTPRequestHandler):
 				h = self.headers['Host']
 
 			self.wfile.write(gen_description_xml(h))
+
+		elif len(parts) == 2 and parts[1] == icon:
+			print 'get %s' % parts[1]
+
+			try:
+				fh = open(icon, 'r')
+				self.wfile.write(fh.read())
+				fh.close()
+
+			except Exception, e:
+				print 'Cannot access %s' % icon, e
 
                 elif len(parts) == 3 and parts[1] == 'api':
                         print 'get all state'
