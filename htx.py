@@ -14,6 +14,8 @@ import time
 from twisted.internet import reactor, task
 from twisted.internet.protocol import DatagramProtocol
 
+main_config = dict()
+
 ssdp_addr = '239.255.255.250'
 ssdp_port = 1900
 
@@ -22,6 +24,8 @@ mac = [ '00', '17', '88', '10', '22', '01' ]
 uid = '2f402f80-da50-11e1-9b23-%s' % ''.join(mac)
 
 icon = 'hue.png'
+
+description_xml = 'description.xml'
 
 lights = []
 
@@ -54,23 +58,47 @@ def gen_config():
     answer["name"] = "Virtual hue"
     answer['datastoreversion'] = '59'
     answer["zigbeechannel"] = 15
-    answer["factorynew"] = False
     answer["mac"] = ':'.join(mac)
     answer["dhcp"] = False
-    #answer["ipaddress"] = "192.168.1.7"
+    answer["ipaddress"] = main_config['listen-address']
     #answer["netmask"] = "255.255.255.0"
     #answer["gateway"] = "192.168.1.1"
     answer["proxyaddress"] = "none"
     answer["proxyport"] = 0
-    global UTC
-    answer["UTC"] = UTC
-    answer["localtime"] = UTC
-    answer["timezone"] = "Europe/Madrid"
+    answer["UTC"] = gen_ts()
+    answer["localtime"] = gen_ts()
+    answer["timezone"] = "Europe/Amsterdam"
     answer["swversion"] = "01038802"
     answer["apiversion"] = "1.16.0"
-    answer["linkbutton"] = False
-    answer["portalservices"] = portalservices
-    answer["portalconnection"] = "connected"
+
+    su = dict()
+    su["updatestate"] = 0,
+    su["checkforupdate"] = False
+    dt = dict()
+    dt["bridge"] = False
+    dt["lights"] = []
+    dt["sensors"] = []
+    su["devicetypes"] = dt
+    dt["url"] = ''
+    dt["text"] = ''
+    dt["notify"] = True
+    answer['swupdate'] = su
+
+    answer["linkbutton"] = True
+    answer["portalservices"] = False
+    answer["portalconnection"] = "disconnected"
+    pc = dict()
+    pc['signedon'] = False
+    pc['incoming'] = False
+    pc['outgoing'] = False
+    pc['communication'] = 'disconnected'
+    answer['portalstate'] = pc
+    answer["factorynew"] = False
+    answer["replacesbridgeid"] = None
+    b = dict()
+    b['status'] = 'idle'
+    b['errorcode'] = 0
+    answer['backup'] = b
 
     wl = dict()
     key = '%s' % username
@@ -80,20 +108,13 @@ def gen_config():
     wl[key]["name"] = devicetype
     answer['whitelist'] = wl
 
-    ps = dict()
-    ps["signedon"] = True
-    ps["incoming"] = False
-    ps["outgoing"] = True
-    ps["communication"] = "disconnected"
-    answer['portalstate'] = ps
-
     return answer
 
 def gen_config_json():
-    return json.dumps(gen_config())
+    return json.dumps(gen_config(), sort_keys=True)
 
 def gen_sensors_json():
-    return json.dumps(dict())
+    return json.dumps(dict(), sort_keys=True)
 
 def set_light_state(nr, state):
     entry = json.loads(state)
@@ -117,7 +138,7 @@ def set_light_state(nr, state):
 
     json_obj.append(entry)
 
-    return json.dumps(json_obj)
+    return json.dumps(json_obj, sort_keys=True)
 
 def set_group_state(nr, state):
     # only 1 group in the current version
@@ -191,7 +212,7 @@ def gen_groups():
     return answer
 
 def gen_groups_json():
-    return json.dumps(gen_groups())
+    return json.dumps(gen_groups(), sort_keys=True)
 
 def gen_scenes():
     answer = dict()
@@ -216,10 +237,10 @@ def gen_scenes():
     return answer
 
 def gen_scenes_json():
-    return json.dumps(gen_scenes())
+    return json.dumps(gen_scenes(), sort_keys=True)
 
 def gen_light_json():
-    return json.dumps(gen_lights())
+    return json.dumps(gen_lights(), sort_keys=True)
 
 def gen_dump_json():
     answer = dict()
@@ -238,7 +259,7 @@ def gen_dump_json():
 
     answer['scenes'] = dict()
 
-    return json.dumps(answer)
+    return json.dumps(answer, sort_keys=True)
 
 def gen_description_xml(addr):
 	reply = [ '<root xmlns="urn:schemas-upnp-org:device-1-0">', 
@@ -286,8 +307,8 @@ class server(BaseHTTPRequestHandler):
 
                 parts = self.path.split('/')
 
-		if len(parts) == 2 and parts[1] == 'description.xml':
-			print 'get description.xml'
+		if len(parts) == 2 and parts[1] == description_xml:
+			print 'get %s' % description_xml
 
 			h = self.server.server_address[0]
 
@@ -414,7 +435,7 @@ def add_light(name, id_, command):
 def gen_ssdp_content(addr, st_nt):
 	reply = [
 	  "CACHE-CONTROL: max-age=100\r\n",
-	  "LOCATION: http://%s:80/description.xml\r\n" % addr,
+	  "LOCATION: http://%s:80/%s\r\n" % (addr, description_xml),
 	  "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
 	  "hue-bridgeid: %sFFFE%s\r\n" % (''.join(mac[0:3]), ''.join(mac[3:6])),
 	  "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
