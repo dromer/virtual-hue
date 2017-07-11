@@ -20,6 +20,7 @@ ssdp_addr = '239.255.255.250'
 ssdp_port = 1900
 
 mac = [ '00', '17', '88', '10', '22', '01' ]
+bridgeid = '%sFFFE%s' % (''.join(mac[0:3]), ''.join(mac[3:6]))
 
 uid = '2f402f80-da50-11e1-9b23-%s' % ''.join(mac)
 
@@ -47,66 +48,81 @@ def put_config_json(j):
         global portalservices
         portalservices = entry['portalservices']
 
-def gen_config():
+def gen_config(full):
     answer = dict()
 
-    answer["name"] = "Virtual hue"
-    answer['datastoreversion'] = '59'
-    answer["zigbeechannel"] = 15
-    answer["mac"] = ':'.join(mac)
-    answer["dhcp"] = False
-    answer["ipaddress"] = main_config['listen-address']
-    answer["netmask"] = main_config['netmask']
-    answer["gateway"] = main_config['gateway']
-    answer["proxyaddress"] = "none"
-    answer["proxyport"] = 0
-    answer["UTC"] = gen_ts()
-    answer["localtime"] = gen_ts()
-    answer["timezone"] = "Europe/Amsterdam"
-    answer["swversion"] = "01038802"
-    answer["apiversion"] = "1.16.0"
+    if full:
+	    answer["name"] = "Virtual hue"
+	    answer['datastoreversion'] = '59'
+	    answer["zigbeechannel"] = 15
+	    answer["mac"] = ':'.join(mac)
+	    answer["dhcp"] = False
+	    answer["ipaddress"] = main_config['listen-address']
+	    answer["netmask"] = main_config['netmask']
+	    answer["gateway"] = main_config['gateway']
+	    answer["proxyaddress"] = "none"
+	    answer["proxyport"] = 0
+	    answer["UTC"] = gen_ts()
+	    answer["localtime"] = gen_ts()
+	    answer["timezone"] = "Europe/Amsterdam"
+	    answer["swversion"] = "01038802"
+	    answer["apiversion"] = "1.2.1"
 
-    su = dict()
-    su["updatestate"] = 0,
-    su["checkforupdate"] = False
-    dt = dict()
-    dt["bridge"] = False
-    dt["lights"] = []
-    dt["sensors"] = []
-    su["devicetypes"] = dt
-    dt["url"] = ''
-    dt["text"] = ''
-    dt["notify"] = True
-    answer['swupdate'] = su
+	    su = dict()
+	    su["updatestate"] = 0,
+	    su["checkforupdate"] = False
+	    dt = dict()
+	    dt["bridge"] = False
+	    dt["lights"] = []
+	    dt["sensors"] = []
+	    su["devicetypes"] = dt
+	    dt["url"] = ''
+	    dt["text"] = ''
+	    dt["notify"] = True
+	    answer['swupdate'] = su
 
-    answer["linkbutton"] = True
-    answer["portalservices"] = False
-    answer["portalconnection"] = "disconnected"
-    pc = dict()
-    pc['signedon'] = False
-    pc['incoming'] = False
-    pc['outgoing'] = False
-    pc['communication'] = 'disconnected'
-    answer['portalstate'] = pc
-    answer["factorynew"] = False
-    answer["replacesbridgeid"] = None
-    b = dict()
-    b['status'] = 'idle'
-    b['errorcode'] = 0
-    answer['backup'] = b
+	    answer["linkbutton"] = True
+	    answer["portalservices"] = False
+	    answer["portalconnection"] = "disconnected"
+	    pc = dict()
+	    pc['signedon'] = False
+	    pc['incoming'] = False
+	    pc['outgoing'] = False
+	    pc['communication'] = 'disconnected'
+	    answer['portalstate'] = pc
+	    answer["factorynew"] = False
+	    answer["replacesbridgeid"] = None
+	    b = dict()
+	    b['status'] = 'idle'
+	    b['errorcode'] = 0
+	    answer['backup'] = b
 
-    wl = dict()
-    key = '%s' % username
-    wl[key] = dict()
-    wl[key]["last use date"] = gen_ts()
-    wl[key]["create date"] = "2014-04-08T08:55:10"
-    wl[key]["name"] = devicetype
-    answer['whitelist'] = wl
+	    wl = dict()
+	    key = '%s' % username
+	    wl[key] = dict()
+	    wl[key]["last use date"] = gen_ts()
+	    wl[key]["create date"] = "2014-04-08T08:55:10"
+	    wl[key]["name"] = devicetype
+	    answer['whitelist'] = wl
+
+            answer["bridgeid"] = bridgeid
+            answer['modelid'] = '666'
+
+    else:
+        answer["name"] = "Virtual hue"
+        answer['datastoreversion'] = '59'
+        answer["swversion"] = "01038802"
+        answer["apiversion"] = "1.2.1"
+        answer["mac"] = ':'.join(mac)
+        answer["bridgeid"] = bridgeid
+        answer["factorynew"] = False
+        answer["replacesbridgeid"] = None
+        answer['modelid'] = '666'
 
     return answer
 
-def gen_config_json():
-    return json.dumps(gen_config(), sort_keys=True)
+def gen_config_json(full):
+    return json.dumps(gen_config(full), sort_keys=True)
 
 def gen_sensors_json():
     return json.dumps(dict(), sort_keys=True)
@@ -254,7 +270,7 @@ def gen_dump_json():
 
     answer['groups'] = gen_groups()
 
-    answer['config'] = gen_config()
+    answer['config'] = gen_config(True)
 
     answer['swupdate2'] = dict()
 
@@ -361,7 +377,11 @@ class server(BaseHTTPRequestHandler):
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
                         print 'get basic configuration'
-                        self.wfile.write(gen_config_json())
+
+			if parts[2] == username:
+				self.wfile.write(gen_config_json(True))
+			else:
+				self.wfile.write(gen_config_json(False))
 
                 else:
                         print 'unknown get request', self.path
@@ -445,7 +465,7 @@ def gen_ssdp_content(addr, st_nt):
 	  "CACHE-CONTROL: max-age=100\r\n",
 	  "LOCATION: http://%s:80/%s\r\n" % (addr, description_xml),
 	  "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
-	  "hue-bridgeid: %sFFFE%s\r\n" % (''.join(mac[0:3]), ''.join(mac[3:6])),
+	  "hue-bridgeid: %s\r\n" % bridgeid,
 	  "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
 	  "USN: uuid:%s\r\n" % uid,
 	  "\r\n" ]
