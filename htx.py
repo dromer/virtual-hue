@@ -121,11 +121,14 @@ def gen_config(full):
 
     return answer
 
+def json_dumps(what):
+    return json.dumps(what, sort_keys=True, separators=(',', ':'))
+
 def gen_config_json(full):
-    return json.dumps(gen_config(full), sort_keys=True)
+    return json_dumps(gen_config(full))
 
 def gen_sensors_json():
-    return json.dumps(dict(), sort_keys=True)
+    return json_dumps(dict())
 
 def set_light_state(nr, state):
     entry = json.loads(state)
@@ -154,7 +157,7 @@ def set_light_state(nr, state):
 
     json_obj.append(entry)
 
-    return json.dumps(json_obj, sort_keys=True)
+    return json_dumps(json_obj)
 
 def set_group_state(nr, state):
     # only 1 group in the current version
@@ -192,26 +195,9 @@ def gen_lights(which):
 
     return gen_ind_light_json(which)
 
-def gen_groups():
-    answer = dict()
-
+def gen_groups(which):
     #### a light group
     g = dict()
-    g['name'] = 'Group 1'
-
-    g['lights'] = []
-    for i in xrange(0, len(lights)):
-        g['lights'].append('%d' % (i + 1))
-
-    g["type"] = 'Room'
-
-    g["class"] = 'Living room'
-
-    state = dict()
-    state['all_on'] = False
-    state['any_on'] = False
-    g['state'] = state
-
     action = dict()
     action['on'] = True
     action["bri"] = 254
@@ -226,12 +212,36 @@ def gen_groups():
     action["colormode"] = "ct"
     g['action'] = action
 
-    answer['1'] = g
+    g['lights'] = []
+    nOn = 0
+    for i in xrange(0, len(lights)):
+        g['lights'].append('%d' % (i + 1))
 
-    return answer
+	if lights[i]['state'] == True:
+            nOn +=1
 
-def gen_groups_json():
-    return json.dumps(gen_groups(), sort_keys=True)
+    state = dict()
+    state['all_on'] = nOn == len(lights)
+    state['any_on'] = nOn > 0
+    g['state'] = state
+
+    g["type"] = 'Room'
+
+    g["class"] = 'Living room'
+
+    g['name'] = 'Group 1'
+
+    if which == None:
+        answer = dict()
+
+        answer['1'] = g
+
+        return answer
+
+    return g
+
+def gen_groups_json(which):
+    return json_dumps(gen_groups(which))
 
 def gen_scenes():
     answer = dict()
@@ -256,10 +266,10 @@ def gen_scenes():
     return answer
 
 def gen_scenes_json():
-    return json.dumps(gen_scenes(), sort_keys=True)
+    return json_dumps(gen_scenes())
 
 def gen_light_json(which):
-    return json.dumps(gen_lights(which), sort_keys=True)
+    return json_dumps(gen_lights(which))
 
 def gen_dump_json():
     answer = dict()
@@ -268,7 +278,7 @@ def gen_dump_json():
 
     answer['sensors'] = dict()
 
-    answer['groups'] = gen_groups()
+    answer['groups'] = gen_groups(None)
 
     answer['config'] = gen_config(True)
 
@@ -278,7 +288,7 @@ def gen_dump_json():
 
     answer['scenes'] = dict()
 
-    return json.dumps(answer, sort_keys=True)
+    return json_dumps(answer)
 
 def gen_description_xml(addr):
 	reply = [ '<root xmlns="urn:schemas-upnp-org:device-1-0">', 
@@ -316,17 +326,18 @@ def gen_description_xml(addr):
 
 
 class server(BaseHTTPRequestHandler):
-	def _set_headers(self):
+	def _set_headers(self, mime_type):
 		self.send_response(200)
-		self.send_header('Content-type', 'text/html')
+		self.send_header('Content-type', mime_type)
 		self.end_headers()
 
 	def do_GET(self):
-		self._set_headers()
-
+		print 'GET', self.path
                 parts = self.path.split('/')
 
-		if len(parts) == 2 and parts[1] == description_xml:
+		if self.path == '/%s' % description_xml:
+			self._set_headers("text/xml")
+
 			print 'get %s' % description_xml
 
 			h = self.server.server_address[0]
@@ -336,7 +347,8 @@ class server(BaseHTTPRequestHandler):
 
 			self.wfile.write(gen_description_xml(h))
 
-		elif len(parts) == 2 and parts[1] == icon:
+		elif self.path == '/%s' % icon:
+			self._set_headers("image/png")
 			print 'get %s' % parts[1]
 
 			try:
@@ -347,40 +359,63 @@ class server(BaseHTTPRequestHandler):
 			except Exception, e:
 				print 'Cannot access %s' % icon, e
 
-                elif len(parts) == 3 and parts[1] == 'api':
+                elif self.path == '/api/' or self.path == '/api/%s' % username:
+			self._set_headers("application/json")
+
                         print 'get all state'
                         self.wfile.write(gen_dump_json())
 
+                elif self.path == '/api/config' or self.path == '/api/config/':
+			self._set_headers("application/json")
+
+			print 'get basic configuration short (2)'
+			self.wfile.write(gen_config_json(False))
+
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
+			self._set_headers("application/json")
                         print 'enumerate list of lights'
 
 			if len(parts) == 4 or parts[4] == '':
+				print ' ...all'
 				self.wfile.write(gen_light_json(None))
 			else:
+				print ' ...single (%s)' % parts[4]
 				self.wfile.write(gen_light_json(int(parts[4]) - 1))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
+			self._set_headers("application/json")
                         print 'enumerate list of groups'
-                        self.wfile.write(gen_groups_json())
+
+			if len(parts) == 4 or parts[4] == '':
+				print ' ...all'
+				self.wfile.write(gen_groups_json(None))
+			else:
+				print ' ...single (%s)' % parts[4]
+				self.wfile.write(gen_groups_json(int(parts[4]) - 1))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
+			self._set_headers("application/json")
                         print 'enumerate list of scenes'
                         self.wfile.write(gen_scenes_json())
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
+			self._set_headers("application/json")
                         print 'enumerate list of sensors'
                         self.wfile.write(gen_sensors_json())
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
+			self._set_headers("application/json")
                         print 'get individual light state'
                         self.wfile.write(gen_ind_light_json(int(parts[4]) - 1))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
-                        print 'get basic configuration'
+			self._set_headers("application/json")
 
 			if parts[2] == username:
+				print 'get basic configuration full'
 				self.wfile.write(gen_config_json(True))
 			else:
+				print 'get basic configuration short (1)'
 				self.wfile.write(gen_config_json(False))
 
                 else:
@@ -388,15 +423,16 @@ class server(BaseHTTPRequestHandler):
                         self.wfile.write('???')
 
 	def do_HEAD(self):
-		self._set_headers()
+		self._set_headers("text/html")
         
 	def do_POST(self):
+		print 'POST', self.path
                 parts = self.path.split('/')
 
                 # simpler registration; always return the same key
                 # should keep track in e.g. an sqlite3 database and then do whitelisting etc
                 if len(parts) >= 2 and parts[1] == 'api':
-			self._set_headers()
+			self._set_headers("application/json")
 
                         data_len = int(self.headers['Content-Length'])
                         print self.rfile.read(data_len)
@@ -404,31 +440,33 @@ class server(BaseHTTPRequestHandler):
 			self.wfile.write('[{"success":{"username": "%s"}}]' % username)
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
-			self._set_headers()
+			self._set_headers("application/json")
 			self.wfile.write('[{"success":{"id": "1"}}]')
 
                 else:
                         print 'unknown post request', self.path
 
         def do_PUT(self):
-		self._set_headers()
-
+		print 'PUT', self.path
                 data_len = int(self.headers['Content-Length'])
                 content = self.rfile.read(data_len)
 
                 parts = self.path.split('/')
 
                 if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
+			self._set_headers("application/json")
                         print 'set individual light state'
 
                         self.wfile.write(set_light_state(int(parts[4]) - 1, content))
 
                 elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
+			self._set_headers("application/json")
                         print 'set individual group state'
 
                         self.wfile.write(set_group_state(int(parts[4]) - 1, content))
 
                 elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+			self._set_headers("application/json")
                         print 'put config'
 
                         put_config_json(content)
@@ -436,13 +474,14 @@ class server(BaseHTTPRequestHandler):
 			self.wfile.write('[{"success":"Updated."}]')
 
                 elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
+			self._set_headers("application/json")
                         print 'put config (2)'
                         print content
 
                 else:
+			self._set_headers("text/html")
                         print 'unknown put request', self.path, content
-                
-        
+
 def run(server_class=HTTPServer, handler_class=server, port=80):
 	server_address = ('', port)
 	httpd = server_class(server_address, handler_class)
@@ -529,10 +568,14 @@ def _startSSDPNotifier(addr):
 
 def startSSDPListener(addr):
 	print 'Starting SSDP listener...'
-	Thread(target=_startSSDPListener, args=((addr),)).start()
+	t = Thread(target=_startSSDPListener, args=((addr),))
+	t.daemon = True
+	t.start()
 
 	print 'Starting SSDP notifier...'
-	Thread(target=_startSSDPNotifier, args=((addr),)).start()
+	t = Thread(target=_startSSDPNotifier, args=((addr),))
+	t.daemon = True
+	t.start()
 
 if len(sys.argv) != 2:
     print 'Usage: %s configuration-file' % sys.argv[0]
