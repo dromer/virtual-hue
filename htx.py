@@ -189,17 +189,19 @@ def get_light_state(nr):
     return lights[nr]['state']
 
 def gen_ind_light_json(nr):
-    entry = dict()
 
-    entry['state'] = dict()
-    entry['state']['on'] = get_light_state(nr)
-    entry['state']['reachable'] = True
-
-    entry['type'] = 'Switch'
-    entry['name'] = lights[nr]['name']
-    entry['modelid'] = '666'
-    entry['swversion'] = '42'
-
+    state = {
+        'on': get_light_state(nr),
+        'reachable': True
+    }
+    
+    entry = {
+        'state': state,
+        'type': 'Switch',
+        'name': lights[nr]['name'],
+        'modelid': '666',
+        'swversion': '42',
+    }
 
     return entry
 
@@ -240,18 +242,19 @@ def gen_lights(which):
 
 def gen_groups(which):
     #### a light group
-    action = dict()
-    action['on'] = True
-    action["bri"] = 254
-    action["hue"] = 10000
-    action["sat"] = 254
-    action["effect"] = "none"
-    action['xy'] = []
+    action = {
+        'on': True,
+        'bri': 254,
+        'hue': 10000,
+        'sat': 254,
+        'effect': 'none',
+        'xy': [],
+        'ct': 250,
+        'alert': 'select',
+        'colormode': 'ct'
+    }
     action['xy'].append(0.5)
     action['xy'].append(0.5)
-    action["ct"] = 250
-    action["alert"] = "select"
-    action["colormode"] = "ct"
 
     nOn = 0
     for i in xrange(0, len(lights)):
@@ -260,23 +263,22 @@ def gen_groups(which):
     if lights[i]['state'] == True:
         nOn +=1
 
-    state = dict()
-    state['all_on'] = nOn == len(lights)
-    state['any_on'] = nOn > 0
+    state = {
+        'all_on': nOn == len(lights),
+        'any_on': nOn > 0
+    }
 
-    g = dict()
-    g['action'] = action
-    g['lights'] = []
-    g['state'] = state
-    g["type"] = 'Room'
-    g["class"] = 'Living room'
-    g['name'] = 'Group 1'
+    g = {
+        'action': action,
+        'lights': [],
+        'state': state,
+        'type': 'Room',
+        'class': 'Living room',
+        'name': 'Group 1'
+    }
 
     if which == None:
-        answer = dict()
-
-        answer['1'] = g
-
+        answer = { '1': g }
         return answer
 
     return g
@@ -285,24 +287,22 @@ def gen_groups_json(which):
     return json_dumps(gen_groups(which))
 
 def gen_scenes():
-    answer = dict()
+    scene = {
+        'name': 'Kathy on 1449133269486',
+        'lights': [],
+        'owner': 'ffffffffe0341b1b376a2389376a2389',
+        'recycle': True,
+        'locked': False,
+        'appdata': dict(),
+        'picture': '',
+        'lastupdated': '2015-12-03T08:57:13',
+        'version': 1
+    }
 
-    scene = dict()
-    scene["name"] = "Kathy on 1449133269486"
-
-    scene["lights"] = []
     for i in xrange(0, len(lights)):
         scene['lights'].append('%d' % (i + 1))
 
-    scene["owner"] = "ffffffffe0341b1b376a2389376a2389"
-    scene["recycle"] = True,
-    scene["locked"] = False,
-    scene["appdata"] = dict()
-    scene["picture"] = ""
-    scene["lastupdated"] = "2015-12-03T08:57:13"
-    scene["version"] = 1
-
-    answer['123123123-on-0'] = scene
+    answer = { '123123123-on-0':  scene }
 
     return answer
 
@@ -528,12 +528,13 @@ def run(port=80):
 def add_light(name, id_, command, command_get):
         global lights
 
-        row = dict()
-        row['name'] = name
-        row['id'] = id_
-        row['cmd'] = command
-        row['cmd_get'] = command_get
-        row['state'] = False
+        row = {
+            'name': name,
+            'id': id_,
+            'cmd': command,
+            'cmd_get': command_get,
+            'state': False
+        }
 
         lights.append(row)
 
