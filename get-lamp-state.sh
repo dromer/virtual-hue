@@ -14,7 +14,7 @@ else
 	echo $1 is unknown
 fi
 
-STATE=`/usr/bin/mosquitto_sub -h $MQTT_SERVER -t $TOPIC`
+STATE=`/usr/bin/mosquitto_sub -h $MQTT_SERVER -t $TOPIC -C 1`
 
 if [ "$STATE" != "0" ]
 then
