@@ -193,17 +193,39 @@ def gen_ind_light_json(nr):
 
     return entry
 
+class gilj(Thread):
+	def __init__(self, nr):
+		self.nr = nr
+		self.result = None
+
+		Thread.__init__(self)
+
+	def get_result(self):
+		return self.result
+
+	def run(self):
+		self.result = gen_ind_light_json(self.nr)
+
 def gen_lights(which):
     global lights
 
     if which == None:
         json_obj = dict()
 
-        nr = 1
+	t = []
+
+	n = 0
         for l in lights:
-            json_obj['%d' % nr] = gen_ind_light_json(nr - 1)
-        
-            nr += 1
+		th = gilj(n)
+		n += 1
+
+		th.start()
+		t.append(th)
+
+        for nr in xrange(0, n):
+            t[nr].join()
+
+            json_obj['%d' % (nr + 1)] = t[nr].get_result()
 
         return json_obj
 
