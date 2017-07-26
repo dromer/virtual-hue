@@ -4,12 +4,14 @@
 # It is released under AGPL 3.0
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from SocketServer import ThreadingMixIn
 import configparser
 import json
 import os
 import socket
 import sys
 from threading import Thread
+import threading
 import time
 from twisted.internet import reactor, task
 from twisted.internet.protocol import DatagramProtocol
@@ -171,7 +173,7 @@ def get_light_state(nr):
 
 	lights[nr]['state'] = False
 
-	if (os.system(lights[nr]['cmd_get']) >> 8) != 0:
+	if (os.system('%s %s' % (lights[nr]['cmd_get'], lights[nr]['id'])) >> 8) != 0:
 	    lights[nr]['state'] = True
 
     return lights[nr]['state']
@@ -493,11 +495,13 @@ class server(BaseHTTPRequestHandler):
 			self._set_headers("text/html")
                         print 'unknown put request', self.path, content
 
-def run(server_class=HTTPServer, handler_class=server, port=80):
-	server_address = ('', port)
-	httpd = server_class(server_address, handler_class)
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+
+def run(port=80):
 	print 'Starting http listener...'
-	httpd.serve_forever()
+	h = ThreadedHTTPServer(('', port), server)
+	h.serve_forever()
 
 def add_light(name, id_, command, command_get):
         global lights
