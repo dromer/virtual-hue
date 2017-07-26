@@ -174,8 +174,8 @@ def get_light_state(nr):
 
 	lights[nr]['state'] = False
 
-	if (os.system('%s %s' % (lights[nr]['cmd_get'], lights[nr]['id'])) >> 8) != 0:
-	    lights[nr]['state'] = True
+        rc = subprocess.call([ lights[nr]['cmd_get'], lights[nr]['id'] ])
+        lights[nr]['state'] = rc != 0
 
     return lights[nr]['state']
 
