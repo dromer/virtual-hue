@@ -54,7 +54,7 @@ def put_config_json(j):
 def gen_config(full):
 
     if full:
-    dt = {
+        dt = {
             'bridge': False,
             'lights': [],
             'sensors': [],
@@ -63,57 +63,57 @@ def gen_config(full):
             'notify': True
         }
 
-    su = {
-        'updatestate': 0,
-        'checkforupdate': False,
-        'devicetypes': dt
+        su = {
+            'updatestate': 0,
+            'checkforupdate': False,
+            'devicetypes': dt
         }
 
-    pc = {
-        'signedon': False,
-        'incoming': False,
-        'outgoing': False,
-        'communication': 'disconnected'
+        pc = {
+            'signedon': False,
+            'incoming': False,
+            'outgoing': False,
+            'communication': 'disconnected'
         }
 
-    b = {
+        b = {
             'status': 'idle',
             'errorcode': 0
         }
         
         key = {
-        'last use date': gen_ts(),
-        'create date': '2014-04-08T08:55:10',
-        'name': devicetype
+            'last use date': gen_ts(),
+            'create date': '2014-04-08T08:55:10',
+            'name': devicetype
         }
 
-    wl = { '%s' % username: key }
+        wl = { '%s' % username: key }
 
         answer = {
             'name': "Virtual hue",
             'datastoreversion': '59',
-        'zigbeechannel': 15,
-        'mac': ':'.join(mac),
-        'dhcp': False,
-        'ipaddress': main_config['listen-address'],
-        'netmask': main_config['netmask'],
-        'gateway': main_config['gateway'],
-        'proxyaddress': "none",
-        'proxyport': 0,
-        'UTC': gen_ts(),
-        'localtime': gen_ts(),
-        'timezone': 'Europe/Amsterdam',
+            'zigbeechannel': 15,
+            'mac': ':'.join(mac),
+            'dhcp': False,
+            'ipaddress': main_config['listen-address'],
+            'netmask': main_config['netmask'],
+            'gateway': main_config['gateway'],
+            'proxyaddress': "none",
+            'proxyport': 0,
+            'UTC': gen_ts(),
+            'localtime': gen_ts(),
+            'timezone': 'Europe/Amsterdam',
             'swversion': '01038802',
             'apiversion': '1.2.1',
-        'swupdate': su,
-        'linkbutton': True,
-        'portalservices': False,
-        'portalconnection': 'disconnected',
-        'portalstate': pc,
-        'factorynew': False,
-        'replacesbridgeid': None,
-        'backup': b,
-        'whitelist': wl,
+            'swupdate': su,
+            'linkbutton': True,
+            'portalservices': False,
+            'portalconnection': 'disconnected',
+            'portalstate': pc,
+            'factorynew': False,
+            'replacesbridgeid': None,
+            'backup': b,
+            'whitelist': wl,
             'bridgeid': bridgeid,
             'modelid': '666'
         }
@@ -148,11 +148,11 @@ def set_light_state(nr, state):
     par = 'off'
     #print entry
     if 'on' in entry and entry['on'] == True:
-            print 'switch %s on' % lights[nr]['name']
-            par = 'on'
+        print 'switch %s on' % lights[nr]['name']
+        par = 'on'
 
     else:
-            print 'switch %s off' % lights[nr]['name']
+        print 'switch %s off' % lights[nr]['name']
 
     if par == 'on':
         lights[nr]['state'] = True
@@ -181,7 +181,7 @@ def get_light_state(nr):
     if lights[nr]['cmd_get'] != None:
         print 'get light %d state using %s' % (nr, lights[nr]['cmd_get'])
 
-    lights[nr]['state'] = False
+        lights[nr]['state'] = False
 
         rc = subprocess.call([ lights[nr]['cmd_get'], lights[nr]['id'] ])
         lights[nr]['state'] = rc != 0
@@ -199,6 +199,7 @@ def gen_ind_light_json(nr):
     entry['name'] = lights[nr]['name']
     entry['modelid'] = '666'
     entry['swversion'] = '42'
+
 
     return entry
 
@@ -220,20 +221,17 @@ def gen_lights(which):
 
     if which == None:
         json_obj = dict()
-
-    t = []
-
-    n = 0
+        t = []
+        n = 0
+        
         for l in lights:
-        th = gilj(n)
-        n += 1
-
-        th.start()
-        t.append(th)
+            th = gilj(n)
+            n += 1
+            th.start()
+            t.append(th)
 
         for nr in xrange(0, n):
             t[nr].join()
-
             json_obj['%d' % (nr + 1)] = t[nr].get_result()
 
         return json_obj
@@ -242,7 +240,6 @@ def gen_lights(which):
 
 def gen_groups(which):
     #### a light group
-    g = dict()
     action = dict()
     action['on'] = True
     action["bri"] = 254
@@ -255,25 +252,24 @@ def gen_groups(which):
     action["ct"] = 250
     action["alert"] = "select"
     action["colormode"] = "ct"
-    g['action'] = action
 
-    g['lights'] = []
     nOn = 0
     for i in xrange(0, len(lights)):
         g['lights'].append('%d' % (i + 1))
 
     if lights[i]['state'] == True:
-            nOn +=1
+        nOn +=1
 
     state = dict()
     state['all_on'] = nOn == len(lights)
     state['any_on'] = nOn > 0
+
+    g = dict()
+    g['action'] = action
+    g['lights'] = []
     g['state'] = state
-
     g["type"] = 'Room'
-
     g["class"] = 'Living room'
-
     g['name'] = 'Group 1'
 
     if which == None:
@@ -320,17 +316,11 @@ def gen_dump_json():
     answer = dict()
 
     answer['lights'] = gen_lights(None)
-
-    answer['sensors'] = dict()
-
     answer['groups'] = gen_groups(None)
-
     answer['config'] = gen_config(True)
-
+    answer['sensors'] = dict()
     answer['swupdate2'] = dict()
-
     answer['schedules'] = dict()
-
     answer['scenes'] = dict()
 
     return json_dumps(answer)
@@ -378,7 +368,7 @@ class server(BaseHTTPRequestHandler):
 
     def do_GET(self):
         print 'GET', self.path
-                parts = self.path.split('/')
+        parts = self.path.split('/')
 
         if self.path == '/%s' % description_xml:
             self._set_headers("text/xml")
@@ -404,21 +394,21 @@ class server(BaseHTTPRequestHandler):
             except Exception, e:
                 print 'Cannot access %s' % icon, e
 
-                elif self.path == '/api/' or self.path == '/api/%s' % username or self.path == '/api/%s/' % username:
+        elif self.path == '/api/' or self.path == '/api/%s' % username or self.path == '/api/%s/' % username:
             self._set_headers("application/json")
 
-                        print 'get all state'
-                        self.wfile.write(gen_dump_json())
+            print 'get all state'
+            self.wfile.write(gen_dump_json())
 
-                elif self.path == '/api/config' or self.path == '/api/config/':
+        elif self.path == '/api/config' or self.path == '/api/config/':
             self._set_headers("application/json")
 
             print 'get basic configuration short (2)'
             self.wfile.write(gen_config_json(False))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
             self._set_headers("application/json")
-                        print 'enumerate list of lights'
+            print 'enumerate list of lights'
 
             if len(parts) == 4 or parts[4] == '':
                 print ' ...all'
@@ -427,9 +417,9 @@ class server(BaseHTTPRequestHandler):
                 print ' ...single (%s)' % parts[4]
                 self.wfile.write(gen_light_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
             self._set_headers("application/json")
-                        print 'enumerate list of groups'
+            print 'enumerate list of groups'
 
             if len(parts) == 4 or parts[4] == '':
                 print ' ...all'
@@ -438,22 +428,22 @@ class server(BaseHTTPRequestHandler):
                 print ' ...single (%s)' % parts[4]
                 self.wfile.write(gen_groups_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
             self._set_headers("application/json")
-                        print 'enumerate list of scenes'
-                        self.wfile.write(gen_scenes_json())
+            print 'enumerate list of scenes'
+            self.wfile.write(gen_scenes_json())
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
             self._set_headers("application/json")
-                        print 'enumerate list of sensors'
-                        self.wfile.write(gen_sensors_json())
+            print 'enumerate list of sensors'
+            self.wfile.write(gen_sensors_json())
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
             self._set_headers("application/json")
-                        print 'get individual light state'
-                        self.wfile.write(gen_ind_light_json(int(parts[4]) - 1))
+            print 'get individual light state'
+            self.wfile.write(gen_ind_light_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
             self._set_headers("application/json")
 
             if parts[2] == username:
@@ -463,8 +453,8 @@ class server(BaseHTTPRequestHandler):
                 print 'get basic configuration short (1)'
                 self.wfile.write(gen_config_json(False))
 
-                else:
-                        print 'unknown get request', self.path
+        else:
+            print 'unknown get request', self.path
             self.wfile.write(gen_config_json(False))
 
     def do_HEAD(self):
@@ -472,60 +462,60 @@ class server(BaseHTTPRequestHandler):
         
     def do_POST(self):
         print 'POST', self.path
-                parts = self.path.split('/')
+        parts = self.path.split('/')
 
-                # simpler registration; always return the same key
-                # should keep track in e.g. an sqlite3 database and then do whitelisting etc
-                if len(parts) >= 2 and parts[1] == 'api':
+        # simpler registration; always return the same key
+        # should keep track in e.g. an sqlite3 database and then do whitelisting etc
+        if len(parts) >= 2 and parts[1] == 'api':
             self._set_headers("application/json")
 
-                        data_len = int(self.headers['Content-Length'])
-                        print self.rfile.read(data_len)
+            data_len = int(self.headers['Content-Length'])
+            print self.rfile.read(data_len)
 
             self.wfile.write('[{"success":{"username": "%s"}}]' % username)
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
             self._set_headers("application/json")
             self.wfile.write('[{"success":{"id": "1"}}]')
 
-                else:
-                        print 'unknown post request', self.path
+        else:
+            print 'unknown post request', self.path
 
-        def do_PUT(self):
+    def do_PUT(self):
         print 'PUT', self.path
-                data_len = int(self.headers['Content-Length'])
-                content = self.rfile.read(data_len)
+        data_len = int(self.headers['Content-Length'])
+        content = self.rfile.read(data_len)
 
-                parts = self.path.split('/')
+        parts = self.path.split('/')
 
-                if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
+        if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
             self._set_headers("application/json")
-                        print 'set individual light state'
+            print 'set individual light state'
 
-                        self.wfile.write(set_light_state(int(parts[4]) - 1, content))
+            self.wfile.write(set_light_state(int(parts[4]) - 1, content))
 
-                elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
+        elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
             self._set_headers("application/json")
-                        print 'set individual group state'
+            print 'set individual group state'
 
-                        self.wfile.write(set_group_state(int(parts[4]) - 1, content))
+            self.wfile.write(set_group_state(int(parts[4]) - 1, content))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
             self._set_headers("application/json")
-                        print 'put config'
+            print 'put config'
 
-                        put_config_json(content)
+            put_config_json(content)
 
             self.wfile.write('[{"success":"Updated."}]')
 
-                elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
+        elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
             self._set_headers("application/json")
-                        print 'put config (2)'
-                        print content
+            print 'put config (2)'
+            print content
 
-                else:
+        else:
             self._set_headers("text/html")
-                        print 'unknown put request', self.path, content
+            print 'unknown put request', self.path, content
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
@@ -640,7 +630,7 @@ for section in settings.sections():
         cmd = items['cmd']
 
         cmd_get = None
-        if 'cmd_get' in items:
+    if 'cmd_get' in items:
         cmd_get = items['cmd_get']
 
         add_light(name, id_, cmd, cmd_get)
