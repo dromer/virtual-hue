@@ -52,75 +52,84 @@ def put_config_json(j):
         portalservices = entry['portalservices']
 
 def gen_config(full):
-    answer = dict()
 
     if full:
-	    answer["name"] = "Virtual hue"
-	    answer['datastoreversion'] = '59'
-	    answer["zigbeechannel"] = 15
-	    answer["mac"] = ':'.join(mac)
-	    answer["dhcp"] = False
-	    answer["ipaddress"] = main_config['listen-address']
-	    answer["netmask"] = main_config['netmask']
-	    answer["gateway"] = main_config['gateway']
-	    answer["proxyaddress"] = "none"
-	    answer["proxyport"] = 0
-	    answer["UTC"] = gen_ts()
-	    answer["localtime"] = gen_ts()
-	    answer["timezone"] = "Europe/Amsterdam"
-	    answer["swversion"] = "01038802"
-	    answer["apiversion"] = "1.2.1"
+	dt = {
+    	    'bridge': False,
+    	    'lights': [],
+    	    'sensors': [],
+    	    'url': '',
+    	    'text': '',
+    	    'notify': True
+        }
 
-	    su = dict()
-	    su["updatestate"] = 0,
-	    su["checkforupdate"] = False
-	    dt = dict()
-	    dt["bridge"] = False
-	    dt["lights"] = []
-	    dt["sensors"] = []
-	    su["devicetypes"] = dt
-	    dt["url"] = ''
-	    dt["text"] = ''
-	    dt["notify"] = True
-	    answer['swupdate'] = su
+	su = {
+	    'updatestate': 0,
+	    'checkforupdate': False,
+	    'devicetypes': dt
+        }
 
-	    answer["linkbutton"] = True
-	    answer["portalservices"] = False
-	    answer["portalconnection"] = "disconnected"
-	    pc = dict()
-	    pc['signedon'] = False
-	    pc['incoming'] = False
-	    pc['outgoing'] = False
-	    pc['communication'] = 'disconnected'
-	    answer['portalstate'] = pc
-	    answer["factorynew"] = False
-	    answer["replacesbridgeid"] = None
-	    b = dict()
-	    b['status'] = 'idle'
-	    b['errorcode'] = 0
-	    answer['backup'] = b
+	pc = {
+	    'signedon': False,
+	    'incoming': False,
+	    'outgoing': False,
+	    'communication': 'disconnected'
+        }
 
-	    wl = dict()
-	    key = '%s' % username
-	    wl[key] = dict()
-	    wl[key]["last use date"] = gen_ts()
-	    wl[key]["create date"] = "2014-04-08T08:55:10"
-	    wl[key]["name"] = devicetype
-	    answer['whitelist'] = wl
+	b = {
+            'status': 'idle',
+            'errorcode': 0
+        }
+        
+        key = {
+	    'last use date': gen_ts(),
+	    'create date': '2014-04-08T08:55:10',
+	    'name': devicetype
+        }
 
-            answer["bridgeid"] = bridgeid
-            answer['modelid'] = '666'
+	wl = { '%s' % username: key }
+
+        answer = {
+            'name': "Virtual hue",
+            'datastoreversion': '59',
+	    'zigbeechannel': 15,
+	    'mac': ':'.join(mac),
+	    'dhcp': False,
+	    'ipaddress': main_config['listen-address'],
+	    'netmask': main_config['netmask'],
+	    'gateway': main_config['gateway'],
+	    'proxyaddress': "none",
+	    'proxyport': 0,
+	    'UTC': gen_ts(),
+	    'localtime': gen_ts(),
+	    'timezone': 'Europe/Amsterdam',
+            'swversion': '01038802',
+            'apiversion': '1.2.1',
+	    'swupdate': su,
+	    'linkbutton': True,
+	    'portalservices': False,
+	    'portalconnection': 'disconnected',
+	    'portalstate': pc,
+	    'factorynew': False,
+	    'replacesbridgeid': None,
+	    'backup': b,
+	    'whitelist': wl,
+            'bridgeid': bridgeid,
+            'modelid': '666'
+        }
 
     else:
-        answer["name"] = "Virtual hue"
-        answer['datastoreversion'] = '59'
-        answer["swversion"] = "01038802"
-        answer["apiversion"] = "1.2.1"
-        answer["mac"] = ':'.join(mac)
-        answer["bridgeid"] = bridgeid
-        answer["factorynew"] = False
-        answer["replacesbridgeid"] = None
-        answer['modelid'] = '666'
+        answer = {
+            'name': 'Virtual hue',
+            'datastoreversion': '59',
+            'swversion': '01038802',
+            'apiversion': '1.2.1',
+            'mac': ':'.join(mac),
+            'bridgeid': bridgeid,
+            'factorynew': False,
+            'replacesbridgeid': None,
+            'modelid': '666'
+        }
 
     return answer
 
