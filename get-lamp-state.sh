@@ -12,7 +12,7 @@ elif [ "$1" = "another_lamp" ] ; then
 	TOPIC='vanheusden/lamp/thisstatus'
 fi
 
-STATE=`/usr/bin/mosquitto_sub -h $MQTT_SERVER -t $TOPIC -C 1`
+STATE=`/usr/bin/mosquitto_sub -h $MQTT_SERVER -t $TOPIC`
 
 if [ "$STATE" != "0" ]
 then
