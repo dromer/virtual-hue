@@ -165,11 +165,22 @@ def set_group_state(nr, state):
     for i in xrange(0, len(lights)):
         set_light_state(i, state)
 
+def get_light_state(nr):
+    if lights[nr]['cmd_get'] != None:
+        print 'get light %d state using %s' % (nr, lights[nr]['cmd_get'])
+
+	lights[nr]['state'] = False
+
+	if (os.system(lights[nr]['cmd_get']) >> 8) != 0:
+	    lights[nr]['state'] = True
+
+    return lights[nr]['state']
+
 def gen_ind_light_json(nr):
     entry = dict()
 
     entry['state'] = dict()
-    entry['state']['on'] = lights[nr]['state']
+    entry['state']['on'] = get_light_state(nr)
     entry['state']['reachable'] = True
 
     entry['type'] = 'Switch'
@@ -359,7 +370,7 @@ class server(BaseHTTPRequestHandler):
 			except Exception, e:
 				print 'Cannot access %s' % icon, e
 
-                elif self.path == '/api/' or self.path == '/api/%s' % username:
+                elif self.path == '/api/' or self.path == '/api/%s' % username or self.path == '/api/%s/' % username:
 			self._set_headers("application/json")
 
                         print 'get all state'
@@ -420,7 +431,7 @@ class server(BaseHTTPRequestHandler):
 
                 else:
                         print 'unknown get request', self.path
-                        self.wfile.write('???')
+			self.wfile.write(gen_config_json(False))
 
 	def do_HEAD(self):
 		self._set_headers("text/html")
@@ -488,13 +499,14 @@ def run(server_class=HTTPServer, handler_class=server, port=80):
 	print 'Starting http listener...'
 	httpd.serve_forever()
 
-def add_light(name, id_, command):
+def add_light(name, id_, command, command_get):
         global lights
 
         row = dict()
         row['name'] = name
         row['id'] = id_
         row['cmd'] = command
+        row['cmd_get'] = command_get
         row['state'] = False
 
         lights.append(row)
@@ -591,7 +603,11 @@ for section in settings.sections():
         name = items['name']
         cmd = items['cmd']
 
-        add_light(name, id_, cmd)
+        cmd_get = None
+        if 'cmd_get' in items:
+		cmd_get = items['cmd_get']
+
+        add_light(name, id_, cmd, cmd_get)
 
 main_config = dict(settings.items('main'))
 
