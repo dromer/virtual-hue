@@ -10,6 +10,8 @@ if [ "$1" = "some_id" ] ; then
 	TOPIC='mancave_power_state'
 elif [ "$1" = "another_lamp" ] ; then
 	TOPIC='vanheusden/lamp/thisstatus'
+else
+	echo $1 is unknown
 fi
 
 STATE=`/usr/bin/mosquitto_sub -h $MQTT_SERVER -t $TOPIC`
