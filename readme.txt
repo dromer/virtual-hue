@@ -7,6 +7,7 @@ Current status: works! You can switch on- and off virtual lights. Also discovery
 
 required:
 - python-configparser
+- python-twisted-web
 
 
 Folkert van Heusden
