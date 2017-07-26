@@ -9,6 +9,7 @@ import configparser
 import json
 import os
 import socket
+import subprocess
 import sys
 from threading import Thread
 import threading
@@ -150,7 +151,7 @@ def set_light_state(nr, state):
         lights[nr]['state'] = False
 
     # invoke command
-    os.system('%s %s %s' % (lights[nr]['cmd'], lights[nr]['id'], par))
+    subprocess.call([ lights[nr]['cmd'], lights[nr]['id'], par ])
 
     json_obj = []
 
