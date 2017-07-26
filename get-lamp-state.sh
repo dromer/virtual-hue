@@ -1,7 +1,8 @@
 #! /bin/sh
 
-# example script that can be invoked by the virtual bridge
-# can also be python or whatever you like
+# Example script that can be invoked by the virtual bridge.
+# It retrieves the state of a lamp (or whatever you want to be switched) and returns that to the virtual bridge.
+# This script can also be written in python or perl or whatever you like.
 
 MQTT_SERVER=192.168.64.1
 

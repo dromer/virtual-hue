@@ -1,7 +1,8 @@
 #! /bin/sh
 
-# example script that can be invoked by the virtual bridge
-# can also be python or whatever you like
+# Example script that can be invoked by the virtual bridge.
+# It sets the state of a lamp (or whatever you want to be switched).
+# This script can also be written in python or perl or whatever you like.
 
 echo ID of the lamp: $1
 echo state: $2
