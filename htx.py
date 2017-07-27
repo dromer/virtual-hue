@@ -52,75 +52,84 @@ def put_config_json(j):
         portalservices = entry['portalservices']
 
 def gen_config(full):
-    answer = dict()
 
     if full:
-	    answer["name"] = "Virtual hue"
-	    answer['datastoreversion'] = '59'
-	    answer["zigbeechannel"] = 15
-	    answer["mac"] = ':'.join(mac)
-	    answer["dhcp"] = False
-	    answer["ipaddress"] = main_config['listen-address']
-	    answer["netmask"] = main_config['netmask']
-	    answer["gateway"] = main_config['gateway']
-	    answer["proxyaddress"] = "none"
-	    answer["proxyport"] = 0
-	    answer["UTC"] = gen_ts()
-	    answer["localtime"] = gen_ts()
-	    answer["timezone"] = "Europe/Amsterdam"
-	    answer["swversion"] = "01038802"
-	    answer["apiversion"] = "1.2.1"
+        dt = {
+            'bridge': False,
+            'lights': [],
+            'sensors': [],
+            'url': '',
+            'text': '',
+            'notify': True
+        }
 
-	    su = dict()
-	    su["updatestate"] = 0,
-	    su["checkforupdate"] = False
-	    dt = dict()
-	    dt["bridge"] = False
-	    dt["lights"] = []
-	    dt["sensors"] = []
-	    su["devicetypes"] = dt
-	    dt["url"] = ''
-	    dt["text"] = ''
-	    dt["notify"] = True
-	    answer['swupdate'] = su
+        su = {
+            'updatestate': 0,
+            'checkforupdate': False,
+            'devicetypes': dt
+        }
 
-	    answer["linkbutton"] = True
-	    answer["portalservices"] = False
-	    answer["portalconnection"] = "disconnected"
-	    pc = dict()
-	    pc['signedon'] = False
-	    pc['incoming'] = False
-	    pc['outgoing'] = False
-	    pc['communication'] = 'disconnected'
-	    answer['portalstate'] = pc
-	    answer["factorynew"] = False
-	    answer["replacesbridgeid"] = None
-	    b = dict()
-	    b['status'] = 'idle'
-	    b['errorcode'] = 0
-	    answer['backup'] = b
+        pc = {
+            'signedon': False,
+            'incoming': False,
+            'outgoing': False,
+            'communication': 'disconnected'
+        }
 
-	    wl = dict()
-	    key = '%s' % username
-	    wl[key] = dict()
-	    wl[key]["last use date"] = gen_ts()
-	    wl[key]["create date"] = "2014-04-08T08:55:10"
-	    wl[key]["name"] = devicetype
-	    answer['whitelist'] = wl
+        b = {
+            'status': 'idle',
+            'errorcode': 0
+        }
+        
+        key = {
+            'last use date': gen_ts(),
+            'create date': '2014-04-08T08:55:10',
+            'name': devicetype
+        }
 
-            answer["bridgeid"] = bridgeid
-            answer['modelid'] = '666'
+        wl = { '%s' % username: key }
+
+        answer = {
+            'name': "Virtual hue",
+            'datastoreversion': '59',
+            'zigbeechannel': 15,
+            'mac': ':'.join(mac),
+            'dhcp': False,
+            'ipaddress': main_config['listen-address'],
+            'netmask': main_config['netmask'],
+            'gateway': main_config['gateway'],
+            'proxyaddress': "none",
+            'proxyport': 0,
+            'UTC': gen_ts(),
+            'localtime': gen_ts(),
+            'timezone': 'Europe/Amsterdam',
+            'swversion': '01038802',
+            'apiversion': '1.2.1',
+            'swupdate': su,
+            'linkbutton': True,
+            'portalservices': False,
+            'portalconnection': 'disconnected',
+            'portalstate': pc,
+            'factorynew': False,
+            'replacesbridgeid': None,
+            'backup': b,
+            'whitelist': wl,
+            'bridgeid': bridgeid,
+            'modelid': '666'
+        }
 
     else:
-        answer["name"] = "Virtual hue"
-        answer['datastoreversion'] = '59'
-        answer["swversion"] = "01038802"
-        answer["apiversion"] = "1.2.1"
-        answer["mac"] = ':'.join(mac)
-        answer["bridgeid"] = bridgeid
-        answer["factorynew"] = False
-        answer["replacesbridgeid"] = None
-        answer['modelid'] = '666'
+        answer = {
+            'name': 'Virtual hue',
+            'datastoreversion': '59',
+            'swversion': '01038802',
+            'apiversion': '1.2.1',
+            'mac': ':'.join(mac),
+            'bridgeid': bridgeid,
+            'factorynew': False,
+            'replacesbridgeid': None,
+            'modelid': '666'
+        }
 
     return answer
 
@@ -139,11 +148,11 @@ def set_light_state(nr, state):
     par = 'off'
     #print entry
     if 'on' in entry and entry['on'] == True:
-            print 'switch %s on' % lights[nr]['name']
-            par = 'on'
+        print 'switch %s on' % lights[nr]['name']
+        par = 'on'
 
     else:
-            print 'switch %s off' % lights[nr]['name']
+        print 'switch %s off' % lights[nr]['name']
 
     if par == 'on':
         lights[nr]['state'] = True
@@ -172,7 +181,7 @@ def get_light_state(nr):
     if lights[nr]['cmd_get'] != None:
         print 'get light %d state using %s' % (nr, lights[nr]['cmd_get'])
 
-	lights[nr]['state'] = False
+        lights[nr]['state'] = False
 
         rc = subprocess.call([ lights[nr]['cmd_get'], lights[nr]['id'] ])
         lights[nr]['state'] = rc != 0
@@ -180,51 +189,51 @@ def get_light_state(nr):
     return lights[nr]['state']
 
 def gen_ind_light_json(nr):
-    entry = dict()
 
-    entry['state'] = dict()
-    entry['state']['on'] = get_light_state(nr)
-    entry['state']['reachable'] = True
-
-    entry['type'] = 'Switch'
-    entry['name'] = lights[nr]['name']
-    entry['modelid'] = '666'
-    entry['swversion'] = '42'
+    state = {
+        'on': get_light_state(nr),
+        'reachable': True
+    }
+    
+    entry = {
+        'state': state,
+        'type': 'Switch',
+        'name': lights[nr]['name'],
+        'modelid': '666',
+        'swversion': '42',
+    }
 
     return entry
 
 class gilj(Thread):
-	def __init__(self, nr):
-		self.nr = nr
-		self.result = None
+    def __init__(self, nr):
+        self.nr = nr
+        self.result = None
 
-		Thread.__init__(self)
+        Thread.__init__(self)
 
-	def get_result(self):
-		return self.result
+    def get_result(self):
+        return self.result
 
-	def run(self):
-		self.result = gen_ind_light_json(self.nr)
+    def run(self):
+        self.result = gen_ind_light_json(self.nr)
 
 def gen_lights(which):
     global lights
 
     if which == None:
         json_obj = dict()
-
-	t = []
-
-	n = 0
+        t = []
+        n = 0
+        
         for l in lights:
-		th = gilj(n)
-		n += 1
-
-		th.start()
-		t.append(th)
+            th = gilj(n)
+            n += 1
+            th.start()
+            t.append(th)
 
         for nr in xrange(0, n):
             t[nr].join()
-
             json_obj['%d' % (nr + 1)] = t[nr].get_result()
 
         return json_obj
@@ -233,45 +242,43 @@ def gen_lights(which):
 
 def gen_groups(which):
     #### a light group
-    g = dict()
-    action = dict()
-    action['on'] = True
-    action["bri"] = 254
-    action["hue"] = 10000
-    action["sat"] = 254
-    action["effect"] = "none"
-    action['xy'] = []
+    action = {
+        'on': True,
+        'bri': 254,
+        'hue': 10000,
+        'sat': 254,
+        'effect': 'none',
+        'xy': [],
+        'ct': 250,
+        'alert': 'select',
+        'colormode': 'ct'
+    }
     action['xy'].append(0.5)
     action['xy'].append(0.5)
-    action["ct"] = 250
-    action["alert"] = "select"
-    action["colormode"] = "ct"
-    g['action'] = action
 
-    g['lights'] = []
     nOn = 0
     for i in xrange(0, len(lights)):
         g['lights'].append('%d' % (i + 1))
 
-	if lights[i]['state'] == True:
-            nOn +=1
+    if lights[i]['state'] == True:
+        nOn +=1
 
-    state = dict()
-    state['all_on'] = nOn == len(lights)
-    state['any_on'] = nOn > 0
-    g['state'] = state
+    state = {
+        'all_on': nOn == len(lights),
+        'any_on': nOn > 0
+    }
 
-    g["type"] = 'Room'
-
-    g["class"] = 'Living room'
-
-    g['name'] = 'Group 1'
+    g = {
+        'action': action,
+        'lights': [],
+        'state': state,
+        'type': 'Room',
+        'class': 'Living room',
+        'name': 'Group 1'
+    }
 
     if which == None:
-        answer = dict()
-
-        answer['1'] = g
-
+        answer = { '1': g }
         return answer
 
     return g
@@ -280,24 +287,22 @@ def gen_groups_json(which):
     return json_dumps(gen_groups(which))
 
 def gen_scenes():
-    answer = dict()
+    scene = {
+        'name': 'Kathy on 1449133269486',
+        'lights': [],
+        'owner': 'ffffffffe0341b1b376a2389376a2389',
+        'recycle': True,
+        'locked': False,
+        'appdata': dict(),
+        'picture': '',
+        'lastupdated': '2015-12-03T08:57:13',
+        'version': 1
+    }
 
-    scene = dict()
-    scene["name"] = "Kathy on 1449133269486"
-
-    scene["lights"] = []
     for i in xrange(0, len(lights)):
         scene['lights'].append('%d' % (i + 1))
 
-    scene["owner"] = "ffffffffe0341b1b376a2389376a2389"
-    scene["recycle"] = True,
-    scene["locked"] = False,
-    scene["appdata"] = dict()
-    scene["picture"] = ""
-    scene["lastupdated"] = "2015-12-03T08:57:13"
-    scene["version"] = 1
-
-    answer['123123123-on-0'] = scene
+    answer = { '123123123-on-0':  scene }
 
     return answer
 
@@ -311,244 +316,239 @@ def gen_dump_json():
     answer = dict()
 
     answer['lights'] = gen_lights(None)
-
-    answer['sensors'] = dict()
-
     answer['groups'] = gen_groups(None)
-
     answer['config'] = gen_config(True)
-
+    answer['sensors'] = dict()
     answer['swupdate2'] = dict()
-
     answer['schedules'] = dict()
-
     answer['scenes'] = dict()
 
     return json_dumps(answer)
 
 def gen_description_xml(addr):
-	reply = [ '<root xmlns="urn:schemas-upnp-org:device-1-0">', 
-		'<specVersion>',
-		'<major>1</major>',
-		'<minor>0</minor>',
-		'</specVersion>',
-		'<URLBase>http://%s/</URLBase>' % addr,
-		'<device>',
-		'<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>',
-		'<friendlyName>Virtual hue</friendlyName>',
-		'<manufacturer>vanheusden.com</manufacturer>',
-		'<manufacturerURL>http://www.vanheusden.com</manufacturerURL>',
-		'<modelDescription>Virtual Philips hue bridge</modelDescription>',
-		'<modelName>Virtual hue</modelName>',
-		'<modelNumber>1</modelNumber>',
-		'<modelURL>https://github.com/flok99/virtual-hue</modelURL>',
-		'<serialNumber>%s</serialNumber>' % ''.join(mac),
-		'<UDN>uuid:%s/UDN>' % uid,
-		'<presentationURL>index.html</presentationURL>',
-		'<iconList>',
-		'<icon>',
-		'<mimetype>image/png</mimetype>',
-		'<height>48</height>',
-		'<width>48</width>',
-		'<depth>24</depth>',
-		'<url>%s</url>' % icon,
-		'</icon>',
-		'</iconList>',
-		'</device>',
-		'</root>'
-		]
+    reply = [ '<root xmlns="urn:schemas-upnp-org:device-1-0">', 
+        '<specVersion>',
+        '<major>1</major>',
+        '<minor>0</minor>',
+        '</specVersion>',
+        '<URLBase>http://%s/</URLBase>' % addr,
+        '<device>',
+        '<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>',
+        '<friendlyName>Virtual hue</friendlyName>',
+        '<manufacturer>vanheusden.com</manufacturer>',
+        '<manufacturerURL>http://www.vanheusden.com</manufacturerURL>',
+        '<modelDescription>Virtual Philips hue bridge</modelDescription>',
+        '<modelName>Virtual hue</modelName>',
+        '<modelNumber>1</modelNumber>',
+        '<modelURL>https://github.com/flok99/virtual-hue</modelURL>',
+        '<serialNumber>%s</serialNumber>' % ''.join(mac),
+        '<UDN>uuid:%s/UDN>' % uid,
+        '<presentationURL>index.html</presentationURL>',
+        '<iconList>',
+        '<icon>',
+        '<mimetype>image/png</mimetype>',
+        '<height>48</height>',
+        '<width>48</width>',
+        '<depth>24</depth>',
+        '<url>%s</url>' % icon,
+        '</icon>',
+        '</iconList>',
+        '</device>',
+        '</root>'
+        ]
 
-	return '\r\n'.join(reply)
+    return '\r\n'.join(reply)
 
 
 class server(BaseHTTPRequestHandler):
-	def _set_headers(self, mime_type):
-		self.send_response(200)
-		self.send_header('Content-type', mime_type)
-		self.end_headers()
+    def _set_headers(self, mime_type):
+        self.send_response(200)
+        self.send_header('Content-type', mime_type)
+        self.end_headers()
 
-	def do_GET(self):
-		print 'GET', self.path
-                parts = self.path.split('/')
+    def do_GET(self):
+        print 'GET', self.path
+        parts = self.path.split('/')
 
-		if self.path == '/%s' % description_xml:
-			self._set_headers("text/xml")
+        if self.path == '/%s' % description_xml:
+            self._set_headers("text/xml")
 
-			print 'get %s' % description_xml
+            print 'get %s' % description_xml
 
-			h = self.server.server_address[0]
+            h = self.server.server_address[0]
 
-			if 'Host' in self.headers:
-				h = self.headers['Host']
+            if 'Host' in self.headers:
+                h = self.headers['Host']
 
-			self.wfile.write(gen_description_xml(h))
+            self.wfile.write(gen_description_xml(h))
 
-		elif self.path == '/%s' % icon:
-			self._set_headers("image/png")
-			print 'get %s' % parts[1]
+        elif self.path == '/%s' % icon:
+            self._set_headers("image/png")
+            print 'get %s' % parts[1]
 
-			try:
-				fh = open(icon, 'r')
-				self.wfile.write(fh.read())
-				fh.close()
+            try:
+                fh = open(icon, 'r')
+                self.wfile.write(fh.read())
+                fh.close()
 
-			except Exception, e:
-				print 'Cannot access %s' % icon, e
+            except Exception, e:
+                print 'Cannot access %s' % icon, e
 
-                elif self.path == '/api/' or self.path == '/api/%s' % username or self.path == '/api/%s/' % username:
-			self._set_headers("application/json")
+        elif self.path == '/api/' or self.path == '/api/%s' % username or self.path == '/api/%s/' % username:
+            self._set_headers("application/json")
 
-                        print 'get all state'
-                        self.wfile.write(gen_dump_json())
+            print 'get all state'
+            self.wfile.write(gen_dump_json())
 
-                elif self.path == '/api/config' or self.path == '/api/config/':
-			self._set_headers("application/json")
+        elif self.path == '/api/config' or self.path == '/api/config/':
+            self._set_headers("application/json")
 
-			print 'get basic configuration short (2)'
-			self.wfile.write(gen_config_json(False))
+            print 'get basic configuration short (2)'
+            self.wfile.write(gen_config_json(False))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
-			self._set_headers("application/json")
-                        print 'enumerate list of lights'
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'lights':
+            self._set_headers("application/json")
+            print 'enumerate list of lights'
 
-			if len(parts) == 4 or parts[4] == '':
-				print ' ...all'
-				self.wfile.write(gen_light_json(None))
-			else:
-				print ' ...single (%s)' % parts[4]
-				self.wfile.write(gen_light_json(int(parts[4]) - 1))
+            if len(parts) == 4 or parts[4] == '':
+                print ' ...all'
+                self.wfile.write(gen_light_json(None))
+            else:
+                print ' ...single (%s)' % parts[4]
+                self.wfile.write(gen_light_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
-			self._set_headers("application/json")
-                        print 'enumerate list of groups'
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'groups':
+            self._set_headers("application/json")
+            print 'enumerate list of groups'
 
-			if len(parts) == 4 or parts[4] == '':
-				print ' ...all'
-				self.wfile.write(gen_groups_json(None))
-			else:
-				print ' ...single (%s)' % parts[4]
-				self.wfile.write(gen_groups_json(int(parts[4]) - 1))
+            if len(parts) == 4 or parts[4] == '':
+                print ' ...all'
+                self.wfile.write(gen_groups_json(None))
+            else:
+                print ' ...single (%s)' % parts[4]
+                self.wfile.write(gen_groups_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
-			self._set_headers("application/json")
-                        print 'enumerate list of scenes'
-                        self.wfile.write(gen_scenes_json())
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'scenes':
+            self._set_headers("application/json")
+            print 'enumerate list of scenes'
+            self.wfile.write(gen_scenes_json())
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
-			self._set_headers("application/json")
-                        print 'enumerate list of sensors'
-                        self.wfile.write(gen_sensors_json())
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'sensors':
+            self._set_headers("application/json")
+            print 'enumerate list of sensors'
+            self.wfile.write(gen_sensors_json())
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
-			self._set_headers("application/json")
-                        print 'get individual light state'
-                        self.wfile.write(gen_ind_light_json(int(parts[4]) - 1))
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'light':
+            self._set_headers("application/json")
+            print 'get individual light state'
+            self.wfile.write(gen_ind_light_json(int(parts[4]) - 1))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
-			self._set_headers("application/json")
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+            self._set_headers("application/json")
 
-			if parts[2] == username:
-				print 'get basic configuration full'
-				self.wfile.write(gen_config_json(True))
-			else:
-				print 'get basic configuration short (1)'
-				self.wfile.write(gen_config_json(False))
+            if parts[2] == username:
+                print 'get basic configuration full'
+                self.wfile.write(gen_config_json(True))
+            else:
+                print 'get basic configuration short (1)'
+                self.wfile.write(gen_config_json(False))
 
-                else:
-                        print 'unknown get request', self.path
-			self.wfile.write(gen_config_json(False))
+        else:
+            print 'unknown get request', self.path
+            self.wfile.write(gen_config_json(False))
 
-	def do_HEAD(self):
-		self._set_headers("text/html")
+    def do_HEAD(self):
+        self._set_headers("text/html")
         
-	def do_POST(self):
-		print 'POST', self.path
-                parts = self.path.split('/')
+    def do_POST(self):
+        print 'POST', self.path
+        parts = self.path.split('/')
 
-                # simpler registration; always return the same key
-                # should keep track in e.g. an sqlite3 database and then do whitelisting etc
-                if len(parts) >= 2 and parts[1] == 'api':
-			self._set_headers("application/json")
+        # simpler registration; always return the same key
+        # should keep track in e.g. an sqlite3 database and then do whitelisting etc
+        if len(parts) >= 2 and parts[1] == 'api':
+            self._set_headers("application/json")
 
-                        data_len = int(self.headers['Content-Length'])
-                        print self.rfile.read(data_len)
+            data_len = int(self.headers['Content-Length'])
+            print self.rfile.read(data_len)
 
-			self.wfile.write('[{"success":{"username": "%s"}}]' % username)
+            self.wfile.write('[{"success":{"username": "%s"}}]' % username)
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
-			self._set_headers("application/json")
-			self.wfile.write('[{"success":{"id": "1"}}]')
+        elif len(parts) >= 4 and parts[1] == 'api' and parts['3'] == 'groups':
+            self._set_headers("application/json")
+            self.wfile.write('[{"success":{"id": "1"}}]')
 
-                else:
-                        print 'unknown post request', self.path
+        else:
+            print 'unknown post request', self.path
 
-        def do_PUT(self):
-		print 'PUT', self.path
-                data_len = int(self.headers['Content-Length'])
-                content = self.rfile.read(data_len)
+    def do_PUT(self):
+        print 'PUT', self.path
+        data_len = int(self.headers['Content-Length'])
+        content = self.rfile.read(data_len)
 
-                parts = self.path.split('/')
+        parts = self.path.split('/')
 
-                if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
-			self._set_headers("application/json")
-                        print 'set individual light state'
+        if len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'lights' and parts[5] == 'state':
+            self._set_headers("application/json")
+            print 'set individual light state'
 
-                        self.wfile.write(set_light_state(int(parts[4]) - 1, content))
+            self.wfile.write(set_light_state(int(parts[4]) - 1, content))
 
-                elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
-			self._set_headers("application/json")
-                        print 'set individual group state'
+        elif len(parts) >= 6 and parts[1] == 'api' and parts[3] == 'groups' and parts[5] == 'action':
+            self._set_headers("application/json")
+            print 'set individual group state'
 
-                        self.wfile.write(set_group_state(int(parts[4]) - 1, content))
+            self.wfile.write(set_group_state(int(parts[4]) - 1, content))
 
-                elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
-			self._set_headers("application/json")
-                        print 'put config'
+        elif len(parts) >= 4 and parts[1] == 'api' and parts[3] == 'config':
+            self._set_headers("application/json")
+            print 'put config'
 
-                        put_config_json(content)
+            put_config_json(content)
 
-			self.wfile.write('[{"success":"Updated."}]')
+            self.wfile.write('[{"success":"Updated."}]')
 
-                elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
-			self._set_headers("application/json")
-                        print 'put config (2)'
-                        print content
+        elif len(parts) >= 3 and parts[1] == 'api' and parts[2] == 'config':
+            self._set_headers("application/json")
+            print 'put config (2)'
+            print content
 
-                else:
-			self._set_headers("text/html")
-                        print 'unknown put request', self.path, content
+        else:
+            self._set_headers("text/html")
+            print 'unknown put request', self.path, content
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
 def run(port=80):
-	print 'Starting http listener...'
-	h = ThreadedHTTPServer(('', port), server)
-	h.serve_forever()
+    print 'Starting http listener...'
+    h = ThreadedHTTPServer(('', port), server)
+    h.serve_forever()
 
 def add_light(name, id_, command, command_get):
         global lights
 
-        row = dict()
-        row['name'] = name
-        row['id'] = id_
-        row['cmd'] = command
-        row['cmd_get'] = command_get
-        row['state'] = False
+        row = {
+            'name': name,
+            'id': id_,
+            'cmd': command,
+            'cmd_get': command_get,
+            'state': False
+        }
 
         lights.append(row)
 
 def gen_ssdp_content(addr, st_nt):
-	reply = [
-	  "CACHE-CONTROL: max-age=100\r\n",
-	  "LOCATION: http://%s:80/%s\r\n" % (addr, description_xml),
-	  "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
-	  "hue-bridgeid: %s\r\n" % bridgeid,
-	  "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
-	  "USN: uuid:%s\r\n" % uid,
-	  "\r\n" ]
+    reply = [
+      "CACHE-CONTROL: max-age=100\r\n",
+      "LOCATION: http://%s:80/%s\r\n" % (addr, description_xml),
+      "SERVER: VirtualHue/0.1 UPNP/1.0 IpBridge/1.16.0\r\n",
+      "hue-bridgeid: %s\r\n" % bridgeid,
+      "%s: urn:schemas-upnp-org:device:Basic:1\r\n" % st_nt,
+      "USN: uuid:%s\r\n" % uid,
+      "\r\n" ]
 
-	return ''.join(reply)
+    return ''.join(reply)
 
 class SSDPDevice(DatagramProtocol):
     def __init__(self, addr):
@@ -559,20 +559,20 @@ class SSDPDevice(DatagramProtocol):
 
     def datagramReceived(self, datagram, address):
         first_line = datagram.rsplit('\r\n')[0]
-	parts = first_line.split(' ')
+    parts = first_line.split(' ')
 
-	if parts[0] == 'M-SEARCH':
-		print "Received %s from %r" % (first_line, address, )
+    if parts[0] == 'M-SEARCH':
+        print "Received %s from %r" % (first_line, address, )
 
-		# FIXME
-		reply_header = [
-		  "HTTP/1.1 200 OK\r\n",
-		  "EXT:\r\n"
-		  ]
+        # FIXME
+        reply_header = [
+          "HTTP/1.1 200 OK\r\n",
+          "EXT:\r\n"
+          ]
 
-		reply = ''.join(reply_header) + gen_ssdp_content(self.addr, 'ST')
+        reply = ''.join(reply_header) + gen_ssdp_content(self.addr, 'ST')
 
-		self.ssdp.write(reply, address)
+        self.ssdp.write(reply, address)
 
     def stop(self):
         self.ssdp.leaveGroup(ssdp_addr, interface=self.addr)
@@ -587,34 +587,34 @@ def _startSSDPListener(addr):
     reactor.run(installSignalHandlers=0)
 
 def _startSSDPNotifier(addr):
-	msgHeader = [
-			'NOTIFY * HTTP/1.1\r\n',
-			'HOST: 239.255.255.250:1900\r\n',
-			"NTS: ssdp:alive\r\n"
-		]
+    msgHeader = [
+            'NOTIFY * HTTP/1.1\r\n',
+            'HOST: 239.255.255.250:1900\r\n',
+            "NTS: ssdp:alive\r\n"
+        ]
 
-	msg = ''.join(msgHeader) + gen_ssdp_content(addr, 'NT')
+    msg = ''.join(msgHeader) + gen_ssdp_content(addr, 'NT')
 
-	while True:
-		print "Sending M-NOTIFY..."
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-		sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
-		sock.sendto(msg, (ssdp_addr, ssdp_port))
-		sock.close()
-		del sock
+    while True:
+        print "Sending M-NOTIFY..."
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
+        sock.sendto(msg, (ssdp_addr, ssdp_port))
+        sock.close()
+        del sock
 
-		time.sleep(6)
+        time.sleep(6)
 
 def startSSDPListener(addr):
-	print 'Starting SSDP listener...'
-	t = Thread(target=_startSSDPListener, args=((addr),))
-	t.daemon = True
-	t.start()
+    print 'Starting SSDP listener...'
+    t = Thread(target=_startSSDPListener, args=((addr),))
+    t.daemon = True
+    t.start()
 
-	print 'Starting SSDP notifier...'
-	t = Thread(target=_startSSDPNotifier, args=((addr),))
-	t.daemon = True
-	t.start()
+    print 'Starting SSDP notifier...'
+    t = Thread(target=_startSSDPNotifier, args=((addr),))
+    t.daemon = True
+    t.start()
 
 if len(sys.argv) != 2:
     print 'Usage: %s configuration-file' % sys.argv[0]
@@ -631,8 +631,8 @@ for section in settings.sections():
         cmd = items['cmd']
 
         cmd_get = None
-        if 'cmd_get' in items:
-		cmd_get = items['cmd_get']
+    if 'cmd_get' in items:
+        cmd_get = items['cmd_get']
 
         add_light(name, id_, cmd, cmd_get)
 
