@@ -256,12 +256,13 @@ def gen_groups(which):
     action['xy'].append(0.5)
     action['xy'].append(0.5)
 
+    g_lights = []
     nOn = 0
     for i in xrange(0, len(lights)):
-        g['lights'].append('%d' % (i + 1))
+        g_lights.append('%d' % (i + 1))
 
-    if lights[i]['state'] == True:
-        nOn +=1
+        if lights[i]['state'] == True:
+            nOn +=1
 
     state = {
         'all_on': nOn == len(lights),
@@ -270,7 +271,7 @@ def gen_groups(which):
 
     g = {
         'action': action,
-        'lights': [],
+        'lights': g_lights,
         'state': state,
         'type': 'Room',
         'class': 'Living room',
@@ -559,20 +560,20 @@ class SSDPDevice(DatagramProtocol):
 
     def datagramReceived(self, datagram, address):
         first_line = datagram.rsplit('\r\n')[0]
-    parts = first_line.split(' ')
+        parts = first_line.split(' ')
 
-    if parts[0] == 'M-SEARCH':
-        print "Received %s from %r" % (first_line, address, )
+        if parts[0] == 'M-SEARCH':
+            print "Received %s from %r" % (first_line, address, )
 
-        # FIXME
-        reply_header = [
-          "HTTP/1.1 200 OK\r\n",
-          "EXT:\r\n"
-          ]
+            # FIXME
+            reply_header = [
+              "HTTP/1.1 200 OK\r\n",
+              "EXT:\r\n"
+              ]
 
-        reply = ''.join(reply_header) + gen_ssdp_content(self.addr, 'ST')
+            reply = ''.join(reply_header) + gen_ssdp_content(self.addr, 'ST')
 
-        self.ssdp.write(reply, address)
+            self.ssdp.write(reply, address)
 
     def stop(self):
         self.ssdp.leaveGroup(ssdp_addr, interface=self.addr)
@@ -631,8 +632,8 @@ for section in settings.sections():
         cmd = items['cmd']
 
         cmd_get = None
-    if 'cmd_get' in items:
-        cmd_get = items['cmd_get']
+        if 'cmd_get' in items:
+            cmd_get = items['cmd_get']
 
         add_light(name, id_, cmd, cmd_get)
 
