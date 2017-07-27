@@ -314,15 +314,15 @@ def gen_light_json(which):
     return json_dumps(gen_lights(which))
 
 def gen_dump_json():
-    answer = dict()
-
-    answer['lights'] = gen_lights(None)
-    answer['groups'] = gen_groups(None)
-    answer['config'] = gen_config(True)
-    answer['sensors'] = dict()
-    answer['swupdate2'] = dict()
-    answer['schedules'] = dict()
-    answer['scenes'] = dict()
+    answer = {
+        'lights': gen_lights(None),
+        'groups': gen_groups(None),
+        'config': gen_config(True),
+        'sensors': {},
+        'swupdate2': {},
+        'schedules': {},
+        'scenes': {}
+    }
 
     return json_dumps(answer)
 
